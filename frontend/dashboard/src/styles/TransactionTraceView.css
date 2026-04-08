@@ -1,0 +1,269 @@
+/**
+ * TransactionTraceView Component Styles
+ * Clean, professional styling for transaction lifecycle timeline visualization
+ */
+
+.trace-view-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  margin-bottom: 24px;
+}
+
+.trace-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.trace-view-header h2 {
+  margin: 0;
+  color: #f0f9ff;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transaction-id {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-family: monospace;
+}
+
+.trace-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: #cbd5e1;
+}
+
+.trace-divider {
+  color: #64748b;
+}
+
+.trace-status {
+  font-weight: 600;
+}
+
+.trace-duration {
+  font-family: monospace;
+}
+
+.trace-loading,
+.trace-error,
+.trace-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.trace-loading {
+  font-style: italic;
+}
+
+.trace-error {
+  color: #ef4444;
+  background-color: #fee2e2;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.trace-placeholder p {
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.trace-timeline {
+  position: relative;
+  margin: 24px 0;
+  padding-left: 4px;
+}
+
+.trace-timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(139, 92, 246, 0.3) 20%,
+    rgba(139, 92, 246, 0.3) 80%,
+    transparent 100%
+  );
+  border-radius: 1px;
+}
+
+.trace-step {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+  position: relative;
+  padding-left: 24px;
+}
+
+.trace-step:last-child {
+  margin-bottom: 0;
+}
+
+.trace-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.trace-step-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.trace-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 16px;
+  min-width: 200px;
+}
+
+.trace-step-name {
+  color: #f0f9ff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.trace-step-description {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.trace-step-timestamp {
+  color: #f0f9ff;
+  font-size: 0.875rem;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.trace-step-connector {
+  position: absolute;
+  left: -12px;
+  top: 24px;
+  height: calc(50% - 24px);
+  width: 4px;
+}
+
+.trace-connector-line {
+  width: 4px;
+  height: 100%;
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 2px;
+}
+
+.trace-legend {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.legend-title {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+}
+
+.legend-icon {
+  font-size: 1.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .trace-view-container {
+    padding: 16px;
+  }
+  
+  .trace-view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .trace-info {
+    justify-content: flex-start;
+  }
+  
+  .trace-timeline {
+    padding-left: 8px;
+  }
+  
+  .trace-timeline::before {
+    left: 4px;
+  }
+  
+  .trace-step {
+    padding-left: 12px;
+  }
+  
+  .trace-step-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .trace-step-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+  }
+  
+  .trace-step-connector {
+    left: -8px;
+    width: 3px;
+  }
+  
+  .trace-connector-line {
+    width: 3px;
+  }
+  
+  .trace-step-content {
+    margin-left: 12px;
+  }
+  
+  .legend-items {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,714 @@
+/* Transaction Simulator Component Styles */
+
+.transaction-simulator {
+  width: 100%;
+  background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+/* Container Layout */
+.simulator-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.simulator-header {
+  margin-bottom: 28px;
+  border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+  padding-bottom: 16px;
+}
+
+.simulator-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #f0f9ff;
+  letter-spacing: -0.5px;
+}
+
+.simulator-subtitle {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+/* Main Control Panel */
+.simulator-panel {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+}
+
+/* Mode Selector */
+.mode-selector {
+  margin-bottom: 24px;
+}
+
+.mode-selector > label {
+  display: block;
+  font-weight: 600;
+  color: #f0f9ff;
+  margin-bottom: 12px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 16px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 6px;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mode-btn:hover:not(:disabled) {
+  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(139, 92, 246, 0.1);
+  color: #e0e7ff;
+  transform: translateY(-2px);
+}
+
+.mode-btn.active {
+  background: rgba(139, 92, 246, 0.4);
+  border-color: #a78bfa;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.mode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-icon {
+  font-size: 20px;
+}
+
+.mode-name {
+  font-weight: 600;
+  color: inherit;
+}
+
+.mode-desc {
+  font-size: 11px;
+  color: rgba(203, 213, 225, 0.7);
+}
+
+/* Input Group */
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group > label {
+  display: block;
+  font-weight: 600;
+  color: #f0f9ff;
+  margin-bottom: 10px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.count-input {
+  width: 100px;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 6px;
+  color: #f0f9ff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.count-input:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.input-hint {
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.btn {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: rgba(59, 130, 246, 0.8);
+  color: #fff;
+  border: 1px solid rgba(59, 130, 246, 1);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+}
+
+.btn-success {
+  background: rgba(34, 197, 94, 0.8);
+  color: #fff;
+  border: 1px solid rgba(34, 197, 94, 1);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 1);
+}
+
+.btn-warning {
+  background: rgba(234, 179, 8, 0.8);
+  color: #000;
+  border: 1px solid rgba(234, 179, 8, 1);
+  font-weight: 600;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: rgba(234, 179, 8, 1);
+}
+
+.btn-error {
+  background: rgba(239, 68, 68, 0.8);
+  color: #fff;
+  border: 1px solid rgba(239, 68, 68, 1);
+  animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+.btn-error:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 1);
+}
+
+.btn-secondary {
+  background: rgba(100, 116, 139, 0.6);
+  color: #e2e8f0;
+  border: 1px solid rgba(100, 116, 139, 0.8);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.8);
+  color: #f0f9ff;
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.status-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.status-text {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Status variants */
+.status-ready .status-light {
+  background: #22c55e;
+}
+
+.status-running .status-light {
+  background: #3b82f6;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-sending .status-light {
+  background: #eab308;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.status-complete .status-light {
+  background: #22c55e;
+}
+
+.status-stopped .status-light {
+  background: #64748b;
+}
+
+.status-error .status-light {
+  background: #ef4444;
+  animation: pulse-error 0.5s ease-in-out infinite;
+}
+
+.status-success .status-light {
+  background: #22c55e;
+}
+
+/* Error Message */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 13px;
+  margin-bottom: 16px;
+  animation: slideDown 0.3s ease;
+}
+
+.error-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.error-close:hover {
+  color: #fff;
+}
+
+/* Statistics Panel */
+.statistics-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  padding: 20px 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.stat-item:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.1);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.stat-item.total .stat-value {
+  color: #a78bfa;
+}
+
+.stat-item.success .stat-value {
+  color: #22c55e;
+}
+
+.stat-item.failure .stat-value {
+  color: #ef4444;
+}
+
+.stat-item.rate .stat-value {
+  color: #f59e0b;
+}
+
+/* Transactions Display */
+.transactions-display {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.transactions-display h3 {
+  margin: 0 0 16px 0;
+  color: #f0f9ff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.transactions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.transactions-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 3px;
+}
+
+.transactions-list::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 3px;
+}
+
+.transactions-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+.transaction-item {
+  background: rgba(15, 23, 42, 0.6);
+  border-left: 3px solid rgba(139, 92, 246, 0.4);
+  padding: 12px 14px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-left-color: #a78bfa;
+}
+
+.txn-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.txn-id {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.txn-mode {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.txn-mode.normal {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.txn-mode.fraud {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.txn-details {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.txn-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+}
+
+.detail-label {
+  color: #94a3b8;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.detail-value {
+  color: #f0f9ff;
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+}
+
+.txn-flags {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.flag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Help Section */
+.help-section {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.help-section h4 {
+  margin: 0 0 12px 0;
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.help-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.help-section li {
+  margin: 6px 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.help-section strong {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulse-error {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transaction-simulator {
+    padding: 16px;
+  }
+
+  .simulator-panel {
+    padding: 16px;
+  }
+
+  .simulator-header h2 {
+    font-size: 20px;
+  }
+
+  .mode-buttons {
+    flex-direction: column;
+  }
+
+  .mode-btn {
+    min-width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statistics-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .transactions-display {
+    max-height: 300px;
+  }
+
+  .transactions-list {
+    max-height: 250px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .transaction-simulator {
+    padding: 12px;
+  }
+
+  .simulator-header h2 {
+    font-size: 18px;
+  }
+
+  .simulator-header {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .simulator-panel {
+    padding: 12px;
+  }
+
+  .statistics-panel {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .btn {
+    font-size: 12px;
+    padding: 10px 14px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+    height: 28px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  .txn-detail-row {
+    flex-direction: column;
+  }
+
+  .detail-value {
+    text-align: left;
+  }
+}

@@ -136,7 +136,6 @@ yarn.lock
 # ============================================================================
 
 # Environment variables - NEVER commit these
-*.env
 .env
 .env.local
 .env.*.local
@@ -144,6 +143,10 @@ yarn.lock
 .env.test.local
 .env.production.local
 .env.backup
+
+# BUT DO TRACK .env.example as template reference
+!.env.example
+!*/.env.example
 
 # Application properties with secrets
 application.properties

@@ -58,10 +58,9 @@ public class DatabaseHealthIndicator implements HealthIndicator {
             HikariDataSource hikariDataSource = (HikariDataSource) dataSource;
 
             builder.withDetail("database", "PostgreSQL")
-                    .withDetail("pool_size", hikariDataSource.getHikariPoolMXBean().getPoolSize())
+                    .withDetail("max_pool_size", hikariDataSource.getMaximumPoolSize())
                     .withDetail("active_connections", hikariDataSource.getHikariPoolMXBean().getActiveConnections())
                     .withDetail("idle_connections", hikariDataSource.getHikariPoolMXBean().getIdleConnections())
-                    .withDetail("waiting_threads", hikariDataSource.getHikariPoolMXBean().getThreadsAwaitingConnection())
                     .withDetail("url", hikariDataSource.getJdbcUrl());
         } else {
             builder.withDetail("database", "PostgreSQL")

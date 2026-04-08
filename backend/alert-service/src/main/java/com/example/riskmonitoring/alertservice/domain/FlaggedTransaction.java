@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -59,11 +61,39 @@ public class FlaggedTransaction {
     @Column(length = 2000)
     private String investigationNotes;
 
+    /**
+     * Current investigation status of the alert.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AlertStatus status;
+
+    /**
+     * Timestamp when the alert was investigated.
+     */
+    @Column
+    private Instant investigatedAt;
+
+    /**
+     * User ID or system identifier who performed the investigation.
+     */
+    @Column(length = 255)
+    private String investigatedBy;
+
+    /**
+     * Audit trail of all actions performed on this alert.
+     */
+    @OneToMany(mappedBy = "flaggedTransaction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AlertAuditLog> auditLogs = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
         reviewed = false;
+        if (status == null) {
+            status = AlertStatus.NEW;
+        }
     }
 
     @PreUpdate

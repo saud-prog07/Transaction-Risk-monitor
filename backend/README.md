@@ -1,47 +1,96 @@
 # Backend - Transaction Risk Monitoring System
 
-Enterprise Java microservices for real-time fraud detection and risk analysis.
+Production-grade Java microservices for real-time fraud detection with advanced statistical analysis and resilience patterns.
 
-## 🎯 Overview
+## Overview
 
-The backend consists of **4 microservices** that work together:
+The backend consists of 4 intelligent microservices designed for high reliability and scalability:
 
-| Service | Port | Responsibility |
-|---------|------|-----------------|
-| **Producer Service** | 8080 | Transaction ingestion REST API |
-| **Risk Engine** | 8081 | Real-time fraud detection algorithms |
-| **Alert Service** | 8082 | Alert persistence & retrieval API |
-| **Common Models** | - | Shared DTOs, entities, utilities |
+| Service | Port | Responsibility | Highlights |
+|---------|------|-----------------|------------|
+| **Producer Service** | 8080 | Transaction ingestion REST API | Validation, duplication detection, idempotency |
+| **Risk Engine** | 8081 | 4 parallel fraud detection algorithms | Statistical baselines, anomaly detection, configurable |
+| **Alert Service** | 8082 | Alert persistence & retrieval API | PostgreSQL ACID, audit trail, search/filter |
+| **Common Models** | - | Shared DTOs, entities, utilities | Centralized domain logic |
 
 **Infrastructure:**
-- **PostgreSQL 15** - Alert storage, audit trail
-- **IBM MQ** - Reliable message broker for inter-service communication
-- **Docker** - Containerization & orchestration
+- **PostgreSQL 15** - ACID-compliant storage with audit mutations table
+- **IBM MQ Enterprise** - Guaranteed message delivery with ACID transactions
+- **Docker & Compose** - Multi-stage builds, health checks, production-ready
+
+## Microservices Architecture
+
+### Service Communication
+```
+Producer Service -> IBM MQ -> Risk Engine -> IBM MQ -> Alert Service -> PostgreSQL
+    (REST)       (ASYNC)   (PARALLEL)    (ASYNC)   (Persistence)    (AUDIT)
+```
+
+### Risk Engine - 4 Parallel Analyzers
+All implement `RiskAnalyzer` interface, Spring @Component registered, configurable via YAML:
+
+1. **Enhanced Amount Analyzer** (~200 lines)
+   - Statistical detection: avg user spend +/- 2x standard deviation
+   - Prevents false positives for high-earners
+   - Configurable multiplier (default: 2.0 sigma)
+
+2. **Time Anomaly Analyzer** (~180 lines)
+   - Business hour pattern detection
+   - Flags unusual transaction times
+   - User-specific baseline calculations
+
+3. **Location Anomaly Analyzer** (~220 lines)
+   - Frequency-based detection with baselines
+   - Geolocation validation
+   - Impossible travel route detection
+
+4. **User Baseline Calculator** (~280 lines)
+   - Comprehensive historical analysis
+   - Statistical metrics: mean, std dev, min, max
+   - Transaction pattern learning
+
+### Resilience Patterns
+- Retry Logic: Exponential backoff (max 3 attempts, 2s-4s delays)
+- Idempotency: UUID deduplication + transaction cache
+- Dead Letter Queue: Failed messages preserved for analysis
+- Health Checks: Database, MQ broker, service readiness verified
+- Circuit Breaker: MQ connection failure handling
 
 ## 📁 Structure
 
 ```
 backend/
-├── common-models/              # Shared code
-├── producer-service/           # Transaction API (Port 8080)
-│   ├── src/main/java/
-│   ├── src/main/resources/
-│   └── pom.xml
-├── risk-engine/                # Risk analysis (Port 8081)
-│   ├── src/main/java/
-│   ├── src/main/resources/
-│   └── pom.xml
-├── alert-service/              # Alert API (Port 8082)
-│   ├── src/main/java/
-│   ├── src/main/resources/
-│   └── pom.xml
-├── docker-compose.yml          # Full stack orchestration
-├── postgres-init.sql           # Database initialization
-├── pom.xml                     # Parent POM (Maven aggregator)
-└── .env.example                # Environment template
+├── common-models/                          # Shared domain logic
+│   └── src/main/java/
+│       └── com/example/riskmonitoring/
+│           ├── dto/                       # Data Transfer Objects
+│           ├── entity/                    # JPA entities (Transaction, Alert)
+│           └── util/                      # Helper utilities
+├── producer-service/                       # Transaction Gateway (Port 8080)
+│   └── src/main/java/
+│       └── com/example/riskmonitoring/
+│           ├── controller/                # REST endpoints
+│           ├── service/                   # Business logic
+│           └── mq/                        # MQ publishing
+├── risk-engine/                            # Fraud Detection Engine (Port 8081)
+│   └── src/main/java/
+│       └── com/example/riskmonitoring/
+│           ├── analyzer/                  # 4 Risk Analyzers (Statistical)
+│           ├── config/                    # RiskAnalyzerConfig service
+│           └── processor/                 # MQ message processing
+├── alert-service/                          # Alert Management (Port 8082)
+│   └── src/main/java/
+│       └── com/example/riskmonitoring/
+│           ├── controller/                # REST API endpoints
+│           ├── persistence/               # JPA repositories
+│           └── dto/                       # Alert response DTOs
+├── docker-compose.yml                     # Full stack orchestration
+├── postgres-init.sql                      # Schema + 6 Flyway migrations
+├── pom.xml                                # Parent POM (dependency management)
+└── .env.example                           # Configuration template
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -100,7 +149,7 @@ cd alert-service
 mvn spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=dev"
 ```
 
-## 🛠️ Building
+## Building
 
 ### Build All Services
 
@@ -132,7 +181,7 @@ Images created:
 - `risk-engine:latest`
 - `alert-service:latest`
 
-## 📡 REST APIs
+## REST APIs
 
 ### Producer Service (8080)
 

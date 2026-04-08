@@ -2,7 +2,6 @@ package com.example.riskmonitoring.producer.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.jms.event.DefaultJmsListenerContainerFactoryConfigurer;
 import org.springframework.jms.support.JmsUtils;
 import org.springframework.stereotype.Component;
 

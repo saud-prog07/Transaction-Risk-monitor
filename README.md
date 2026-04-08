@@ -4,15 +4,16 @@
 
 A production-ready, event-driven system that processes financial transactions through sophisticated risk analysis, providing immediate fraud detection and alert management with millisecond latency.
 
-## 🎯 Quick Links
+## Quick Links
 
-- [Getting Started](#-quick-start) — 5-minute setup with Docker
-- [Architecture](#-system-architecture) — Design & data flow
-- [API Reference](#-rest-api-reference) — Available endpoints
-- [Tech Stack](#-tech-stack) — Technologies & frameworks
-- [Features](#-key-features) — Fraud detection capabilities
+- [Getting Started](#quick-start) - 5-minute setup with Docker
+- [Architecture](#system-architecture) - Design & data flow
+- [API Reference](#rest-api-reference) - Available endpoints
+- [Tech Stack](#tech-stack) - Technologies & frameworks
+- [Features](#key-features) - Fraud detection capabilities
+- [Dashboard](#monitoring-dashboard) - Real-time monitoring & analytics
 
-## 📋 What This System Does
+## What This System Does
 
 ```
 Transaction → Risk Analysis → Alert Generation → Persistence
@@ -30,7 +31,7 @@ Transaction → Risk Analysis → Alert Generation → Persistence
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ### Services
 
@@ -44,12 +45,18 @@ Transaction → Risk Analysis → Alert Generation → Persistence
 
 ### Risk Analysis Pipeline
 
-The system uses **4 parallel fraud detection algorithms**:
+The system uses **4 intelligent parallel fraud detection algorithms** with statistical analysis:
 
-1. **Amount Detector** — Flags transactions > $10K
-2. **Frequency Analyzer** — Detects 7+ txns in 5 minutes
-3. **Geolocation Anomaly** — Flags impossible travel routes
-4. **User History Deviation** — Detects unusual patterns
+1. **Enhanced Amount Analyzer** — Statistical detection using user baseline (avg ± 2×stdDev)
+2. **Time Anomaly Analyzer** — Business hour pattern detection with configurable thresholds
+3. **Location Anomaly Analyzer** — Frequency-based anomaly detection with baseline comparisons
+4. **User History Deviation** — Comprehensive statistical user behavior baseline calculator (~280 lines)
+
+**Advanced Capabilities:**
+- User baseline calculation from transaction history
+- Business hour pattern analysis (detects unusual transaction times)
+- Statistical standard deviation thresholds for each user
+- Real-time anomaly scoring (configurable via application.yml)
 
 **Risk Scoring:** 0-100 scale
 - **80+** = HIGH RISK (Fraud)
@@ -68,7 +75,7 @@ The system uses **4 parallel fraud detection algorithms**:
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 
 ### Core Technologies
 
@@ -103,7 +110,7 @@ The system uses **4 parallel fraud detection algorithms**:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -180,7 +187,7 @@ curl http://localhost:8082/api/actuator/health
 
 ---
 
-## 🔌 REST API Reference
+## REST API Reference
 
 ### Producer Service (Port 8080)
 
@@ -283,21 +290,51 @@ Response [200 OK]:
 
 ---
 
-## ⚡ Key Features
+## Standout Features
 
-✅ **Real-Time Processing** — 2-4 second detection latency  
-✅ **Parallel Analysis** — 4 independent fraud algorithms run simultaneously  
-✅ **100% Reliability** — Message durability via IBM MQ ACID transactions  
-✅ **Auto-Retry** — Exponential backoff for transient failures  
-✅ **Idempotency** — Transaction cache prevents duplicate processing  
-✅ **Audit Trail** — Complete history of all alerts and changes  
-✅ **Scalable** — Kubernetes-ready, handles 100+ txns/second  
-✅ **Observable** — Spring Actuator, Prometheus metrics, structured logging  
-✅ **Enterprise** — Docker containerized, production-tested
+### Advanced Risk Detection (Phase 7)
+- **Statistical User Baselines** - Calculates transaction patterns per user (~280 lines of math)
+- **Anomaly Detection** - Uses standard deviation thresholds (avg ± 2σ) for personalized detection
+- **Time-based Anomalies** - Detects unusual transaction times outside business hours
+- **Location Intelligence** - Frequency-based analysis with baseline comparisons
+- **Configurable Analyzers** - All risk detectors are Spring components, tunable via YAML
+
+### Professional Operations Dashboard (Phase 5)
+- **Real-time React UI** - Live transaction feed with 3-second polling
+- **Professional Components** - LiveTransactionsFeed, AlertsPanel, SystemHealth monitors
+- **Advanced Visualization** - Color-coded risk levels (RED #EF4444, AMBER #F59E0B, BLUE #3B82F6, GREEN #10B981)
+- **Alert Management** - Filter, review tracking, status updates on live data
+- **Demo-Ready** - Fully functional mock data for presentations
+
+### Transaction Simulator (Phase 8)
+- **Normal Mode** - Realistic transactions ($10-$5,000, 1-2/sec) for system testing
+- **Fraud Mode** - Suspicious patterns ($5,000-$50,000, 5-10/sec) for fraud detection validation
+- **Batch & Stream** - Load testing with configurable delays and submission patterns
+- **Real-time Statistics** - Success/failure rates with last 10 transactions display
+- **Production Testing** - Integrated into dashboard for easy demo scenarios
 
 ---
 
-## 📊 Example: High-Risk Transaction
+## Key Features
+
+- Real-Time Processing: 2-4 second detection latency with sub-second database commits
+- Advanced Detection: Statistical baselines + business hour anomaly detection
+- Parallel Analysis: 4 independent algorithms run simultaneously (async pipelines)
+- 100% Reliability: IBM MQ ACID transactions, Dead Letter Queue handling, guaranteed delivery
+- Exponential Retry: Configurable backoff (max 3 retries, 2s-4s delays) for resilience
+- Idempotency: Transaction cache + UUID deduplication prevents duplicate alerts
+- Audit Trail: Complete forensics - all alerts, status changes, risk scores logged
+- Structured Logging: JSON-formatted logs with trace IDs for debugging
+- Security: Non-root Docker users, health checks, Spring Security integration
+- Observable: Spring Actuator endpoints, Prometheus-ready metrics, detailed health checks
+- Dashboard: Professional React UI with real-time updates and alert management
+- Testing Tools: Transaction simulator with fraud patterns for validation
+- Scalable: Kubernetes-ready, handles 100+ txns/second, configurable thread pools
+- Enterprise: Multi-stage Docker builds (~300MB each), production-tested setup
+
+---
+
+## Example: High-Risk Transaction
 
 ```bash
 # Submit transaction
@@ -331,7 +368,36 @@ curl http://localhost:8082/api/alerts | jq '.[0]'
 
 ---
 
-## 🗂️ Project Structure
+## Architecture Highlights
+
+### Event-Driven Microservices Pattern
+- **Async Communication** - Services decouple via IBM MQ message broker
+- **Domain Separation** - Producer (intake), Risk Engine (analysis), Alert Service (persistence)
+- **Resilience** - Retry policies, circuit breakers, Dead Letter Queue for failed messages
+- **Transaction Consistency** - Saga pattern for cross-service operations
+
+### Advanced Risk Engine Implementation
+- **Pluggable Analyzers** - RiskAnalyzer interface + Spring Component pattern
+- **Parallel Execution** - CompletableFuture for simultaneous algorithm runs
+- **Configurable Thresholds** - YAML profiles for dev/test/prod risk settings
+- **Performance** - Sub-second analysis with optimized JPA queries
+
+### Database Design
+- **PostgreSQL ACID** - Guaranteed data consistency across service failures
+- **Audit Table** - Immutable record of all alert lifecycle changes
+- **Performance Indexing** - Optimized queries on userId, transactionId, createdAt
+- **Flyway Migrations** - Version-controlled schema with V001-V006 evolution
+
+### Production Practices
+- **Health Checks** - All services expose /actuator/health with database/MQ status
+- **Metrics Export** - Prometheus endpoints for monitoring latency & throughput
+- **Structured Logging** - JSON logs with MDC (Mapped Diagnostic Context) for tracing
+- **Docker Security** - Multi-stage builds, non-root users, minimal base images
+- **Configuration as Code** - application.yml for all settings (no hardcoding)
+
+---
+
+## Project Structure
 
 ```
 .
@@ -353,7 +419,7 @@ curl http://localhost:8082/api/alerts | jq '.[0]'
 
 ---
 
-## 📝 Environment Configuration
+## Environment Configuration
 
 Copy `.env.example` to `.env` and customize:
 
@@ -378,7 +444,7 @@ ALERT_SERVICE_PORT=8082
 
 ---
 
-## 🔍 Monitoring
+## Monitoring
 
 ### Health Endpoints
 ```
@@ -403,7 +469,7 @@ docker-compose logs -f alert-service
 
 ---
 
-## 🛠️ Development
+## Development
 
 ### Build All Services
 ```bash
@@ -427,21 +493,50 @@ docker-compose down -v  # Remove containers and volumes
 
 ---
 
-## 📞 Support
+## Detailed Documentation
 
-For issues, questions, or contributions:
-- **Author:** Saud Prog
-- **Repository:** https://github.com/saud-prog07/Transaction-Risk-monitor.git
-- **Issues:** GitHub Issues
+- [RISK_DETECTION_ENHANCEMENTS.md](./understanding%20project/RISK_DETECTION_ENHANCEMENTS.md) - Statistical analysis & baseline implementation (Phase 7)
+- [OPERATIONS_DASHBOARD_README.md](./understanding%20project/OPERATIONS_DASHBOARD_README.md) - React dashboard architecture & components (Phase 5)
+- [TRANSACTION_SIMULATOR_GUIDE.md](./understanding%20project/TRANSACTION_SIMULATOR_GUIDE.md) - Testing tool for fraud patterns (Phase 8)
+- [STRUCTURED_LOGGING_IMPLEMENTATION.md](./backend/STRUCTURED_LOGGING_IMPLEMENTATION.md) - JSON logging & trace IDs
+- [SYSTEM-DOCUMENTATION.md](./understanding%20project/SYSTEM-DOCUMENTATION.md) - Complete technical reference
+- [DOCKER-SETUP-GUIDE.md](./understanding%20project/DOCKER-SETUP-GUIDE.md) - Production deployment guide
 
 ---
 
-## 📄 License
+## About This Project
+
+This system demonstrates:
+- **Advanced Backend Engineering** - Microservices, async messaging, statistical analysis
+- **Frontend Excellence** - React components with real-time updates
+- **DevOps & SRE Skills** - Docker, health monitoring, production resilience
+- **System Design** - ACID transactions, event-driven architecture, scalability
+- **Software Craftsmanship** - Structured logging, audit trails, configurable systems
+
+Quick Showcase:
+1. Start System: `docker-compose up -d` (5 min)
+2. Generate Fraud: Open dashboard, use Transaction Simulator with Fraud Mode
+3. See Detection: Watch alerts appear in real-time (2-4 sec latency)
+4. Inspect Data: Review audit trail, risk scores, statistical baselines
+
+---
+
+## Support
+
+For issues, questions, or contributions:
+- Author: Saud Prog
+- Repository: https://github.com/saud-prog07/Transaction-Risk-monitor.git
+- Issues: GitHub Issues
+
+---
+
+## License
 
 This project is provided as-is for educational and commercial use.
 
 ---
 
-**Last Updated:** April 8, 2026  
-**Status:** Production-Ready  
-**Version:** 1.0.0
+Last Updated: April 9, 2026
+Status: Production-Ready
+Version: 1.0.0
+Phases Completed: 8 (Architecture, Testing, Documentation, Advanced Detection, Dashboard, Simulator)

@@ -2,6 +2,9 @@ package com.example.riskmonitoring.alertservice.controller;
 
 import com.example.riskmonitoring.alertservice.dto.AlertRequest;
 import com.example.riskmonitoring.alertservice.dto.AlertResponse;
+import com.example.riskmonitoring.alertservice.dto.AlertStatusUpdateRequest;
+import com.example.riskmonitoring.alertservice.dto.AlertInvestigateRequest;
+import com.example.riskmonitoring.alertservice.dto.AlertAuditLogResponse;
 import com.example.riskmonitoring.alertservice.service.AlertService;
 import com.example.riskmonitoring.alertservice.service.AlertStatistics;
 import com.example.riskmonitoring.common.models.RiskLevel;
@@ -9,7 +12,9 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -160,6 +165,68 @@ public class AlertController {
     }
 
     /**
+     * Updates the investigation status of an alert.
+     * Supports status transitions: NEW -> REVIEWED -> FRAUD/SAFE
+     *
+     * @param id the alert ID
+     * @param updateRequest the status update request with status, notes, and investigator info
+     * @return the updated alert response with full audit trail
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<AlertResponse> updateAlertStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody AlertStatusUpdateRequest updateRequest) {
+
+        log.info("Updating alert status: AlertId={}, NewStatus={}, InvestigatedBy={}",
+                id, updateRequest.getStatus(), updateRequest.getInvestigatedBy());
+
+        AlertResponse response = alertService.updateAlertStatus(id, updateRequest);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Investigates an alert and marks it as FRAUD or SAFE with investigation notes.
+     * This is a specialized endpoint for fraud investigation workflow.
+     *
+     * @param id the alert ID
+     * @param investigateRequest the investigation request with fraud/safe decision and notes
+     * @return the updated alert response
+     */
+    @PutMapping("/{id}/investigate")
+    public ResponseEntity<AlertResponse> investigateAlert(
+            @PathVariable Long id,
+            @Valid @RequestBody AlertInvestigateRequest investigateRequest) {
+
+        log.info("Investigating alert: AlertId={}, Decision={}, InvestigatedBy={}",
+                id, investigateRequest.getDecision(), investigateRequest.getInvestigatedBy());
+
+        AlertResponse response = alertService.investigateAlert(id, investigateRequest);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves the audit log history for a specific alert.
+     * Shows all status changes and investigations with timestamps and who performed the action.
+     *
+     * @param id the alert ID
+     * @param pageable pagination information
+     * @return page of audit log entries ordered by timestamp (newest first)
+     */
+    @GetMapping("/{id}/audit-log")
+    public ResponseEntity<Page<AlertAuditLogResponse>> getAlertAuditLog(
+            @PathVariable Long id,
+            Pageable pageable) {
+
+        log.debug("Fetching audit log for alert: {}", id);
+
+        Page<AlertAuditLogResponse> auditLogs = alertService.getAuditLog(id, pageable);
+
+        return ResponseEntity.ok(auditLogs);
+    }
+
+    /**
      * Health check endpoint.
      *
      * @return status
@@ -167,5 +234,35 @@ public class AlertController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Alert Service is healthy");
+    }
+
+    /**
+     * Export flagged transactions to CSV format.
+     * Supports filtering by status and risk level.
+     *
+     * @param status optional filter by alert status
+     * @param riskLevel optional filter by risk level
+     * @return CSV file download
+     */
+    @GetMapping("/export/csv")
+    public ResponseEntity<byte[]> exportAlertsToCsv(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String riskLevel) {
+        try {
+            byte[] csvData = alertService.exportAlertsToCsv(status, riskLevel);
+            
+            String filename = "flagged-transactions-" + 
+                    java.time.LocalDate.now() + ".csv";
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType("text/csv"))
+                    .body(csvData);
+        } catch (Exception e) {
+            log.error("Error exporting alerts to CSV", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("Error generating CSV: " + e.getMessage()).getBytes());
+        }
     }
 }

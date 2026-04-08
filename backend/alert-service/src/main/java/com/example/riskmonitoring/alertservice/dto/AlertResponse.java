@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -42,4 +43,16 @@ public class AlertResponse {
 
     @JsonProperty("investigation_notes")
     private String investigationNotes;
+
+    @JsonProperty("status")
+    private String status;
+
+    @JsonProperty("investigated_at")
+    private Instant investigatedAt;
+
+    @JsonProperty("investigated_by")
+    private String investigatedBy;
+
+    @JsonProperty("audit_logs")
+    private List<AlertAuditLogResponse> auditLogs;
 }

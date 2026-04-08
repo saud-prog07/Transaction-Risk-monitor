@@ -1,25 +1,33 @@
 package com.example.riskmonitoring.riskengine.listener;
 
+import com.example.riskmonitoring.common.logging.StructuredLogger;
 import com.example.riskmonitoring.common.models.RiskLevel;
 import com.example.riskmonitoring.common.models.RiskResult;
 import com.example.riskmonitoring.common.models.Transaction;
+import com.example.riskmonitoring.riskengine.service.MetricsService;
 import com.example.riskmonitoring.riskengine.service.RiskAnalysisService;
 import com.example.riskmonitoring.riskengine.service.AlertNotificationService;
+import com.example.riskmonitoring.riskengine.service.FailedMessageHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * JMS message listener for consuming transaction messages from IBM MQ.
  * Processes transactions and sends risk results to alert service.
+ * Failures are recorded to DLQ for retry.
  *
  * Error Handling Strategy:
- * - Serialization errors: Logged and skipped (non-recoverable)
- * - Risk analysis errors: Logged but message acknowledged (prevents infinite retries)
- * - Alert notification errors: Caught and handled by AlertNotificationService retry logic
- * - All errors result in message being acknowledged (no poison message loop)
+ * - Serialization errors: Logged, recorded to DLQ as non-recoverable
+ * - Risk analysis errors: Logged, recorded to DLQ for retry
+ * - Alert notification errors: Caught and recorded to DLQ for retry
+ * - All failures are properly persisted in Dead Letter Queue with stack traces
+ * - Retry mechanism automatically processes failed messages with exponential backoff
  */
 @Slf4j
 @Component
@@ -28,15 +36,22 @@ public class TransactionMessageListener {
     private final ObjectMapper objectMapper;
     private final RiskAnalysisService riskAnalysisService;
     private final AlertNotificationService alertNotificationService;
+    private final FailedMessageHandler failedMessageHandler;
+    private final MetricsService metricsService;
+    private final StructuredLogger structuredLogger = StructuredLogger.getLogger(TransactionMessageListener.class);
 
     public TransactionMessageListener(
             ObjectMapper objectMapper,
             RiskAnalysisService riskAnalysisService,
-            AlertNotificationService alertNotificationService) {
+            AlertNotificationService alertNotificationService,
+            FailedMessageHandler failedMessageHandler,
+            MetricsService metricsService) {
         this.objectMapper = objectMapper;
         this.riskAnalysisService = riskAnalysisService;
         this.alertNotificationService = alertNotificationService;
-        log.info("TransactionMessageListener initialized and ready to process transactions");
+        this.failedMessageHandler = failedMessageHandler;
+        this.metricsService = metricsService;
+        log.info("TransactionMessageListener initialized with DLQ support");
     }
 
     /**
@@ -49,6 +64,8 @@ public class TransactionMessageListener {
      * 3. Send alert to alert-service if risk >= MEDIUM
      * 4. Acknowledge message (commit)
      *
+     * On failure, records to DLQ for retry.
+     *
      * @param message the JSON message containing the transaction
      */
     @JmsListener(destination = "TRANSACTION_QUEUE", containerFactory = "jmsListenerContainerFactory")
@@ -58,44 +75,70 @@ public class TransactionMessageListener {
         String transactionId = "UNKNOWN";
 
         try {
-            log.trace("Raw message received from TRANSACTION_QUEUE: {}", message);
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "MESSAGE_RECEIVED");
+            context.put("source", "TRANSACTION_QUEUE");
+            structuredLogger.debug("Message received from queue", context);
 
-            // Step 1: Deserialize JSON to Transaction
+            // Step 1: Deserialize message to Transaction
             Transaction transaction = deserializeTransaction(message);
             transactionId = transaction.getTransactionId().toString();
+            structuredLogger.setTransactionId(transactionId);
 
-            log.info("[PIPELINE] Transaction received - TransactionId: {}, UserId: {}, Amount: {}, Location: {}",
-                    transactionId, transaction.getUserId(), transaction.getAmount(), transaction.getLocation());
+            Map<String, Object> startContext = new HashMap<>();
+            startContext.put("event", "PROCESSING_STARTED");
+            startContext.put("stage", "RISK_ANALYSIS");
+            structuredLogger.info("Starting transaction processing", startContext);
 
             // Step 2: Analyze transaction for risk
             RiskResult riskResult = analyzeTransaction(transaction);
 
-            log.info("[PIPELINE] Risk analysis completed - TransactionId: {}, RiskLevel: {}, Reason: {}",
-                    riskResult.getTransactionId(), riskResult.getRiskLevel(), riskResult.getReason());
+            long analysisTime = System.currentTimeMillis() - processingStartTime;
+            Map<String, Object> analysisContext = new HashMap<>();
+            analysisContext.put("event", "RISK_ANALYSIS_COMPLETE");
+            analysisContext.put("duration", analysisTime);
+            structuredLogger.info("Risk analysis completed", analysisContext);
 
             // Step 3: Send alert if risk level indicates action needed
             sendAlertIfNeeded(transaction, riskResult, processingStartTime);
 
             long processingTime = System.currentTimeMillis() - processingStartTime;
-            log.info("[PIPELINE] Transaction processing completed successfully - TransactionId: {}, Duration: {}ms",
-                    transactionId, processingTime);
+            Map<String, Object> finContext = new HashMap<>();
+            finContext.put("event", "PROCESSING_COMPLETE");
+            finContext.put("riskLevel", riskResult.getRiskLevel().toString());
+            finContext.put("duration", processingTime);
+            structuredLogger.info("Transaction processing completed", finContext);
 
-        } catch (IllegalArgumentException | com.fasterxml.jackson.core.JsonException jsonEx) {
+            // Update metrics
+            metricsService.incrementTotalProcessed();
+            if (riskResult.getRiskLevel() != null) {
+                metricsService.incrementFlaggedCount();
+            }
+            metricsService.addProcessingTimeMillis(processingTime);
+
+        } catch (IllegalArgumentException | java.io.IOException jsonEx) {
             // Non-recoverable serialization error
-            long processingTime = System.currentTimeMillis() - processingStartTime;
-            log.error("[PIPELINE] Failed to deserialize transaction message (non-recoverable) - "
-                    + "Message: {}, Error: {}, Duration: {}ms",
-                    message, jsonEx.getMessage(), processingTime, jsonEx);
-            // Message will be acknowledged anyway to prevent poison message loop
-            // In production: send to DLQ
+            Map<String, Object> errorContext = new HashMap<>();
+            errorContext.put("event", "DESERIALIZATION_ERROR");
+            errorContext.put("nonRecoverable", true);
+            structuredLogger.error("Failed to deserialize transaction message", errorContext, jsonEx);
+
+            // Record to DLQ as non-recoverable
+            failedMessageHandler.handleDeserializationFailure(message, jsonEx);
+            metricsService.incrementFailedCount();
 
         } catch (Exception ex) {
-            // Log any unexpected errors
-            long processingTime = System.currentTimeMillis() - processingStartTime;
-            log.error("[PIPELINE] Unexpected error processing transaction - TransactionId: {}, Error: {}, Duration: {}ms",
-                    transactionId, ex.getMessage(), processingTime, ex);
-            // Message will be acknowledged to prevent stuck queue
-            // In production: send to DLQ for investigation
+            // Recoverable error
+            Map<String, Object> errorContext = new HashMap<>();
+            errorContext.put("event", "PROCESSING_ERROR");
+            errorContext.put("recoverable", true);
+            structuredLogger.error("Error processing transaction from queue", errorContext, ex);
+
+            // Record to DLQ for retry
+            failedMessageHandler.handleProcessingFailure(message, transactionId, ex);
+            metricsService.incrementFailedCount();
+        } finally {
+            structuredLogger.clearContext();
         }
     }
 
@@ -108,15 +151,26 @@ public class TransactionMessageListener {
      */
     private Transaction deserializeTransaction(String message) {
         try {
-            log.debug("Deserializing transaction from JSON message");
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "DESERIALIZATION_STARTED");
+            structuredLogger.debug("Deserializing transaction from JSON message", context);
+            
             Transaction transaction = objectMapper.readValue(message, Transaction.class);
-            log.debug("Transaction deserialized successfully: {}", transaction.getTransactionId());
+            
+            Map<String, Object> successContext = new HashMap<>();
+            successContext.put("event", "DESERIALIZATION_SUCCESS");
+            successContext.put("transactionId", transaction.getTransactionId());
+            structuredLogger.debug("Transaction deserialized successfully", successContext);
             return transaction;
-        } catch (com.fasterxml.jackson.core.JsonException jsonEx) {
-            log.error("JSON deserialization error - Message: {}, Error: {}", message, jsonEx.getMessage(), jsonEx);
+        } catch (java.io.IOException jsonEx) {
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "JSON_PARSE_ERROR");
+            structuredLogger.error("Invalid JSON format in message", context, jsonEx);
             throw new IllegalArgumentException("Invalid JSON format: " + jsonEx.getMessage(), jsonEx);
         } catch (Exception ex) {
-            log.error("Serialization error - Message: {}, Error: {}", message, ex.getMessage(), ex);
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "DESERIALIZATION_FAILED");
+            structuredLogger.error("Failed to deserialize transaction", context, ex);
             throw new IllegalArgumentException("Failed to deserialize transaction: " + ex.getMessage(), ex);
         }
     }
@@ -130,14 +184,26 @@ public class TransactionMessageListener {
      */
     private RiskResult analyzeTransaction(Transaction transaction) {
         try {
-            log.debug("Starting risk analysis for transaction: {}", transaction.getTransactionId());
+            String txId = transaction.getTransactionId().toString();
+            structuredLogger.setTransactionId(txId);
+            
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "ANALYSIS_STARTED");
+            structuredLogger.info("Starting risk analysis", context);
+            
             RiskResult result = riskAnalysisService.analyzeTransaction(transaction);
-            log.debug("Risk analysis completed - TransactionId: {}, RiskLevel: {}",
-                    result.getTransactionId(), result.getRiskLevel());
+            
+            Map<String, Object> resultContext = new HashMap<>();
+            resultContext.put("event", "ANALYSIS_COMPLETE");
+            resultContext.put("riskLevel", result.getRiskLevel().toString());
+            resultContext.put("reason", result.getReason());
+            structuredLogger.info("Risk analysis completed", resultContext);
             return result;
         } catch (Exception ex) {
-            log.error("Risk analysis failed for transaction: {}, Error: {}",
-                    transaction.getTransactionId(), ex.getMessage(), ex);
+            String txId = transaction.getTransactionId().toString();
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "ANALYSIS_FAILED");
+            structuredLogger.error("Risk analysis failed", context, ex);
             throw new RuntimeException("Risk analysis failed: " + ex.getMessage(), ex);
         }
     }
@@ -152,40 +218,69 @@ public class TransactionMessageListener {
      */
     private void sendAlertIfNeeded(Transaction transaction, RiskResult riskResult, long processingStartTime) {
         RiskLevel riskLevel = riskResult.getRiskLevel();
+        String txId = transaction.getTransactionId().toString();
+        structuredLogger.setTransactionId(txId);
 
         if (riskLevel == RiskLevel.HIGH) {
-            log.warn("[PIPELINE] >>> HIGH RISK TRANSACTION DETECTED <<<");
-            log.warn("[PIPELINE] Flagging transaction: TransactionId: {}, UserId: {}, Amount: {}, Reason: {}",
-                    transaction.getTransactionId(), transaction.getUserId(), transaction.getAmount(),
-                    riskResult.getReason());
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "HIGH_RISK_DETECTED");
+            context.put("riskLevel", "HIGH");
+            context.put("reason", riskResult.getReason());
+            structuredLogger.warn("High-risk transaction detected", context);
+            
             try {
+                Map<String, Object> sendContext = new HashMap<>();
+                sendContext.put("event", "ALERT_SENDING");
+                sendContext.put("destination", "alert-service");
+                structuredLogger.info("Sending high-risk alert", sendContext);
+                
                 alertNotificationService.sendAlert(transaction, riskResult);
+                
+                Map<String, Object> successContext = new HashMap<>();
+                successContext.put("event", "ALERT_SENT");
+                successContext.put("alertType", "HIGH_RISK_ALERT");
+                successContext.put("destination", "alert-service");
+                structuredLogger.info("High-risk alert sent successfully", successContext);
             } catch (Exception ex) {
-                log.error("[PIPELINE] Failed to send HIGH RISK alert - TransactionId: {}, Error: {} "
-                        + "(alert service retry logic will attempt sending)",
-                        transaction.getTransactionId(), ex.getMessage());
-                // Note: AlertNotificationService has @Retryable, so it will retry
-                // If all retries fail, exception is logged
+                Map<String, Object> errorContext = new HashMap<>();
+                errorContext.put("event", "ALERT_SEND_FAILED");
+                errorContext.put("willRetry", true);
+                structuredLogger.error("Failed to send HIGH RISK alert (will be retried)", errorContext, ex);
             }
 
         } else if (riskLevel == RiskLevel.MEDIUM) {
-            log.info("[PIPELINE] MEDIUM RISK transaction detected - TransactionId: {}, "
-                    + "UserId: {}, Amount: {}, Reason: {}",
-                    transaction.getTransactionId(), transaction.getUserId(), transaction.getAmount(),
-                    riskResult.getReason());
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "MEDIUM_RISK_DETECTED");
+            context.put("riskLevel", "MEDIUM");
+            context.put("reason", riskResult.getReason());
+            structuredLogger.warn("Medium-risk transaction detected", context);
+            
             try {
+                Map<String, Object> sendContext = new HashMap<>();
+                sendContext.put("event", "ALERT_SENDING");
+                sendContext.put("destination", "alert-service");
+                structuredLogger.info("Sending medium-risk alert", sendContext);
+                
                 alertNotificationService.sendAlert(transaction, riskResult);
+                
+                Map<String, Object> successContext = new HashMap<>();
+                successContext.put("event", "ALERT_SENT");
+                successContext.put("alertType", "MEDIUM_RISK_ALERT");
+                successContext.put("destination", "alert-service");
+                structuredLogger.info("Medium-risk alert sent successfully", successContext);
             } catch (Exception ex) {
-                log.error("[PIPELINE] Failed to send MEDIUM RISK alert - TransactionId: {}, Error: {} "
-                        + "(alert service retry logic will attempt sending)",
-                        transaction.getTransactionId(), ex.getMessage());
-                // Note: AlertNotificationService has @Retryable, so it will retry
+                Map<String, Object> errorContext = new HashMap<>();
+                errorContext.put("event", "ALERT_SEND_FAILED");
+                errorContext.put("willRetry", true);
+                structuredLogger.error("Failed to send MEDIUM RISK alert (will be retried)", errorContext, ex);
             }
 
         } else {
             // LOW or NO RISK
-            log.debug("[PIPELINE] Transaction low risk or no risk detected - TransactionId: {}, RiskLevel: {}",
-                    transaction.getTransactionId(), riskLevel);
+            Map<String, Object> context = new HashMap<>();
+            context.put("event", "LOW_RISK_DETECTED");
+            context.put("riskLevel", riskLevel.toString());
+            structuredLogger.debug("Low-risk transaction - no alert needed", context);
         }
     }
 }

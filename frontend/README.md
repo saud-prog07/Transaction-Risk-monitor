@@ -1,60 +1,56 @@
 # Frontend - Transaction Risk Monitoring Dashboard
 
-Professional React.js dashboard for real-time fraud detection and risk monitoring.
+Professional React.js dashboard for real-time fraud detection, risk analysis, and alert management.
 
-## 🎯 Overview
+## Overview
 
-A modern, responsive web dashboard that displays:
-- Real-time transaction risk alerts
-- Fraud detection metrics
-- Alert filtering & search
-- Status management
-- API health monitoring
+A modern, fully-featured web dashboard showcasing:
+- Real-time Alerts: Live transaction feed with 3-second polling intervals
+- Advanced Analytics: Risk metrics, statistical data visualization
+- Professional UI: Responsive design with color-coded risk levels
+- Alert Management: Multi-status filtering (NEW, REVIEWED, ESCALATED)
+- Transaction Simulator: Integrated testing tool (Normal & Fraud modes)
+- Health Monitoring: Real-time backend API status
 
 Built with:
-- **React 18** - UI framework
-- **Axios** - HTTP client
-- **CSS3** - Styling (no external dependencies)
+- React 18 - Component-based UI with hooks
+- Axios - HTTP client with interceptors
+- CSS3 - Custom styling (no Bootstrap/Material - pure CSS for learning)
+- Custom Hooks - usePolling for real-time data, custom state management
 
-## 📁 Structure
+## Advanced Component Architecture
 
 ```
 frontend/
-└── dashboard/                      # React application
-    ├── public/
-    │   └── index.html              # HTML entry point
-    ├── src/
-    │   ├── components/
-    │   │   ├── Dashboard.js        # Main container & state
-    │   │   ├── StatCard.js         # Statistics display
-    │   │   ├── AlertsTable.js      # Alerts table
-    │   │   ├── FilterBar.js        # Search & filter
-    │   │   ├── RiskBadge.js        # Risk indicator
-    │   │   └── StatusBadge.js      # Status indicator
-    │   ├── services/
-    │   │   ├── apiService.js       # API client
-    │   │   └── utils.js            # Helper functions
-    │   ├── styles/
-    │   │   ├── index.css           # Global styles
-    │   │   ├── Dashboard.css       # Dashboard layout
-    │   │   ├── StatCard.css        # Card styling
-    │   │   ├── AlertsTable.css     # Table styles
-    │   │   ├── FilterBar.css       # Filter styling
-    │   │   ├── RiskBadge.css       # Risk badge
-    │   │   └── StatusBadge.css     # Status badge
-    │   ├── App.js                  # Root component
-    │   └── index.js                # React DOM entry
-    ├── package.json                # Dependencies
-    ├── .env.example                # Environment template
-    ├── .gitignore                  # Git exclusions
-    ├── README.md                   # Dashboard docs
-    ├── INSTALLATION_GUIDE.md       # Setup guide
-    ├── test-integration.sh         # Test script (Unix)
-    ├── test-integration.ps1        # Test script (Windows)
-    └── CORS_CONFIG_EXAMPLE.java    # Backend CORS setup
+└── dashboard/                               # React SPA
+    └── src/
+        ├── components/
+        │   ├── OperationsDashboard.js           # Orchestrator (state + polling)
+        │   ├── LiveTransactionsFeed.js         # Real-time transaction stream
+        │   ├── AlertsPanel.js                 # Alert list with filtering
+        │   ├── SystemHealth.js                # Backend service status
+        │   ├── TransactionSimulator.js         # Fraud pattern generator (NEW!)
+        │   ├── RiskBadge.js                   # Color-coded risk levels
+        │   ├── StatCard.js                    # Metric dashboard cards
+        │   ├── FilterBar.js                   # Advanced search/filtering
+        │   ├── GuidedDemoFlow.js              # Interactive demo mode
+        │   └── RiskAnalyzerConfigPanel.js     # Risk analyzer tuning UI
+        ├── services/
+        │   ├── apiService.js                  # Centralized API client
+        │   └── utils.js                       # Formatting & helpers
+        ├── hooks/
+        │   └── usePolling.js                  # Real-time data polling
+        ├── styles/
+        │   ├── OperationsDashboard.css         # Main layout (CSS Grid)
+        │   ├── TransactionSimulator.css        # Simulator dark theme
+        │   ├── RiskBadge.css                  # Color scheme (RED/AMBER/BLUE/GREEN)
+        │   ├── AlertsPanel.css                # Table styling
+        │   └── index.css                      # Global styles
+        ├── App.js                         # Router & error boundary
+        └── index.js                        # React mount point
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -86,18 +82,75 @@ npm start
 
 Open: `http://localhost:3000`
 
-## 🎨 Features
+## � Component Features
 
-✅ **Dashboard Statistics**
-- Total alerts count
-- High/Medium/Low risk breakdown
-- New alerts counter
+### OperationsDashboard (Orchestrator)
+- **Real-time Polling** — usePolling hook with 3-second intervals
+- **State Management** — React hooks for alerts, filters, pagination
+- **Error Handling** — Graceful fallbacks, user-friendly error messages
+- **Responsive Grid** — CSS Grid layout for mobile/tablet/desktop
 
-✅ **Alerts Table**
-- Sortable, paginated table
-- Transaction & user ID display
-- Amount formatting
-- Risk level badges
+### LiveTransactionsFeed
+- **Auto-scrolling** — Last 10 transactions with real-time updates
+- **Color Coding** — RED (#EF4444) for HIGH, AMBER (#F59E0B) for MEDIUM, BLUE (#3B82F6) for LOW
+- **Expandable** — Click to view full transaction details
+- **Status Badges** — NEW, REVIEWED, ESCALATED indicators
+
+### AlertsPanel
+- **Advanced Filtering** — By status (NEW/REVIEWED/ESCALATED), risk level (HIGH/MEDIUM/LOW)
+- **Sortable Columns** — Amount, risk score, timestamp
+- **Pagination** — Page size selector (10, 20, 50 per page)
+- **Bulk Actions** — Multi-select, mark as reviewed, escalate
+
+### TransactionSimulator (Phase 8)
+- **Normal Mode** — Realistic transactions ($10-$5K, 1-2/sec) for baseline testing
+- **Fraud Mode** — Suspicious patterns ($5K-$50K, 5-10/sec, limited merchants)
+- **Send Methods**:
+  - "Send One" — Immediate single transaction
+  - "Send Batch" — Multiple with 200ms delay
+  - "Stream" — Continuous generation (stop button available)
+- **Statistics** — Real-time counters (total sent, successful, failed, success %)
+- **Last 10 Display** — Full transaction details with fraud flags
+- **Status Indicators** — Ready, sending, streaming, complete, error states with animations
+
+### SystemHealth
+- **Service Status** — Producer, Risk Engine, Alert Service indicators
+- **Color Indicators** — GREEN (UP), RED (DOWN), YELLOW (DEGRADED)
+- **Response Times** — API latency display
+- **Auto-refresh** — Updates every 5 seconds
+
+## 🎨 UI Design System
+
+**Color Scheme** (Risk Levels):
+- 🔴 **RED** (#EF4444) — HIGH RISK - Fraud detected
+- 🟠 **AMBER** (#F59E0B) — MEDIUM RISK - Suspicious
+- 🔵 **BLUE** (#3B82F6) — LOW RISK - Legitimate
+- 🟢 **GREEN** (#10B981) — Healthy/Operational
+
+**Styling Approach:**
+- Pure CSS3 (no CSS framework)
+- Dark theme on OperationsDashboard
+- Midnight blue gradient background (#0f172a)
+- Responsive breakpoints: Mobile (<768px), Tablet (768-1024px), Desktop (>1024px)
+- Smooth animations: Pulse effects, hover transitions, fade-in load states
+
+## API Integration
+
+**apiService.js Methods:**
+```javascript
+// Alert operations
+apiService.getAlerts(page, size, filters)  // Fetch paginated alerts
+apiService.updateAlertStatus(id, status)   // Update individual alert
+apiService.searchAlerts(query)             // Full-text search
+apiService.getAlertById(id)                // Single alert details
+
+// Transaction simulator
+apiService.submitTransaction(txData)       // Single transaction
+apiService.submitBatchTransactions(txns)   // Batch submission
+
+// Health checks
+apiService.checkHealth()                   // Verify backend connectivity
+```
 - Status management
 
 ✅ **Filtering & Search**
@@ -250,7 +303,7 @@ API Call (if needed)
 Refresh Data
 ```
 
-## 🎨 Styling
+## Styling
 
 ### Color Scheme
 
@@ -279,7 +332,7 @@ Refresh Data
 - **REVIEWED** - Green (#27ae60)
 - **RESOLVED** - Gray (#95a5a6)
 
-## 🧪 Testing
+## Testing
 
 ### Integration Tests
 
@@ -321,7 +374,7 @@ curl http://localhost:8082/api/alerts
 # http://localhost:3000
 ```
 
-## 📦 Build for Production
+## Build for Production
 
 ### Create Production Build
 
@@ -401,7 +454,7 @@ public class CorsConfig {
 - ✅ Input validation on filters
 - ✅ XSS protection (React escapes by default)
 
-## 📱 Responsive Breakpoints
+## Responsive Breakpoints
 
 ```css
 /* Desktop (1024px+) */
@@ -423,7 +476,7 @@ public class CorsConfig {
 }
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Failed to load alerts"
 
@@ -503,9 +556,9 @@ App
     └── Footer
 ```
 
-## 📈 Performance
+## Performance
 
-- **Bundle Size:** ~500KB (gzipped)
+- Bundle Size: ~500KB (gzipped)
 - **Load Time:** <2 seconds (on typical network)
 - **Time to Interactive:** <3 seconds
 - **API Response:** <500ms (with proper backend)
@@ -516,28 +569,49 @@ Optimization techniques:
 - CSS optimization
 - Image optimization
 
-## 🔗 Links
+## Links
 
-- **Backend README:** [backend/README.md](../backend/README.md)
+- Backend README: [backend/README.md](../backend/README.md)
 - **Installation Guide:** [dashboard/INSTALLATION_GUIDE.md](dashboard/INSTALLATION_GUIDE.md)
 - **Project Structure:** [STRUCTURE.md](../STRUCTURE.md)
 - **Main README:** [README.md](../README.md)
 
-## 📝 Contributing
+## � Documentation & Resources
 
-Follow these guidelines:
-1. Use functional components + hooks
-2. Props are well-documented
-3. Components are modular & reusable
-4. Styles are organized by component
-5. API calls are in services folder
+- **[OPERATIONS_DASHBOARD_README.md](../understanding%20project/OPERATIONS_DASHBOARD_README.md)** — Component architecture deep-dive
+- **[TRANSACTION_SIMULATOR_GUIDE.md](../understanding%20project/TRANSACTION_SIMULATOR_GUIDE.md)** — Testing & fraud pattern guide
+- **[INSTALLATION_GUIDE.md](./dashboard/INSTALLATION_GUIDE.md)** — Setup & troubleshooting
+- **[CORS_CONFIG_EXAMPLE.java](./dashboard/CORS_CONFIG_EXAMPLE.java)** — Backend CORS setup
 
-## 📄 License
+## For Recruiters
 
-Production-ready implementation for the Transaction Risk Monitoring System.
+React Skills Demonstrated:
+- React Hooks (useState, useEffect, useCallback, useContext)
+- Custom hooks (usePolling for real-time data)
+- Component composition & reusability
+- Responsive CSS Grid layout
+- HTTP client patterns (Axios with interceptors)
+- State management without Redux
+- Error handling & user feedback
+- Performance optimization (memoization, debouncing)
+
+UI/UX Best Practices:
+- Professional color scheme with accessibility
+- Mobile-first responsive design
+- Loading states & skeleton screens
+- Real-time updates with polling
+- Graceful error handling
+- Comprehensive documentation
+
+Testing Capability:
+- Integrated Transaction Simulator for demo scenarios
+- Use Normal Mode to validate system baseline
+- Use Fraud Mode to trigger real-time alerts
+- Stream Mode for load testing
 
 ---
 
 **Frontend Version:** 1.0.0  
-**Last Updated:** April 8, 2026  
+**Last Updated:** April 9, 2026  
+**React Version:** 18.x  
 **Status:** Production Ready

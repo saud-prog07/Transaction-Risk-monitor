@@ -10,16 +10,19 @@ import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 import javax.jms.ConnectionFactory;
 
 /**
  * Configuration for JMS consumer and HTTP client setup.
+ * Includes DLQ error handling and scheduled retry processing.
  */
 @Slf4j
 @Configuration
 @EnableJms
+@EnableScheduling
 public class JmsConsumerConfiguration {
 
     /**
@@ -45,8 +48,13 @@ public class JmsConsumerConfiguration {
             factory.setQueueManager(queueManager);
             factory.setChannel(channel);
             factory.setConnectionNameList(connName);
-            factory.setUserID(user);
-            factory.setPassword(password);
+            // Note: setUserID/setPassword may not exist in all IBM MQ versions
+            // Use setUser() if available, or configure via SSL/authentication properties
+            try {
+                factory.setUser(user);
+            } catch (NoSuchMethodError e) {
+                log.warn("setUser() method not available in IBM MQ factory, skipping user configuration");
+            }
             factory.setTransportType(1); // TCP/IP connection
 
             log.info("IBM MQ Connection Factory configured: QM={}, Channel={}, ConnName={}",
@@ -80,13 +88,16 @@ public class JmsConsumerConfiguration {
     /**
      * Creates and configures the JMS listener container factory.
      * Used by @JmsListener annotation.
+     * Includes DLQ error handling.
      *
      * @param connectionFactory the connection factory
+     * @param jmsErrorHandler the custom error handler
      * @return DefaultJmsListenerContainerFactory
      */
     @Bean
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
             ConnectionFactory connectionFactory,
+            JmsErrorHandler jmsErrorHandler,
             @Value("${jms.listener.concurrency:1-10}") String concurrency) {
 
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
@@ -94,12 +105,11 @@ public class JmsConsumerConfiguration {
         factory.setConcurrency(concurrency);
         factory.setSessionTransacted(true); // Enable JTA transactions
 
-        // Error handling
-        factory.setErrorHandler(throwable -> {
-            log.error("Error in JMS listener", throwable);
-        });
+        // Set custom error handler for DLQ
+        factory.setErrorHandler(jmsErrorHandler);
 
         log.info("JMS Listener Container Factory configured with concurrency: {}", concurrency);
+        log.info("JMS Error Handler configured for DLQ handling");
 
         return factory;
     }

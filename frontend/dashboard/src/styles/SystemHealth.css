@@ -1,0 +1,341 @@
+/**
+ * SystemHealth Component Styles
+ * Clean, professional styling for system health monitoring
+ */
+
+.system-health-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  margin-bottom: 24px;
+}
+
+.health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.health-header h2 {
+  margin: 0;
+  color: #f0f9ff;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.health-header .last-updated {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+/* Main Status Grid */
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.health-card {
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+.health-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.connected {
+  background-color: #10B981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+.status-dot.degraded {
+  background-color: #F59E0B;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.status-dot.disconnected {
+  background-color: #EF4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 0.75rem;
+}
+
+.status-label {
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-rate {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pulse-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10B981;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Status-specific card colors */
+.processing-card.high {
+  border-left: 4px solid #10B981;
+}
+
+.processing-card.normal {
+  border-left: 4px solid #F59E0B;
+}
+
+.processing-card.low {
+  border-left: 4px solid #EF4444;
+}
+
+.dlq-card.healthy {
+  border-left: 4px solid #10B981;
+}
+
+.dlq-card.warning {
+  border-left: 4px solid #F59E0B;
+}
+
+.dlq-card.critical {
+  border-left: 4px solid #EF4444;
+}
+
+.dlq-status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.dlq-status.healthy {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.dlq-status.warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+}
+
+.dlq-status.critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+/* Uptime Card Specific */
+.uptime-card {
+  border-left: 4px solid #3B82F6;
+}
+
+.uptime-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f0f9ff;
+}
+
+.uptime-unit {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.uptime-bar {
+  background-color: rgba(30, 41, 59, 0.6);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.uptime-fill {
+  background: linear-gradient(90deg, #3B82F6, #60A5FA);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Detailed Health Metrics */
+.health-details {
+  margin-top: 24px;
+}
+
+.details-header {
+  margin-bottom: 16px;
+}
+
+.details-header h3 {
+  margin: 0;
+  color: #f0f9ff;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-name {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.detail-value {
+  color: #f0f9ff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+/* Alert Section */
+.health-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.health-alert.critical {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.health-alert {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.alert-icon {
+  font-size: 1.25rem;
+}
+
+.alert-text {
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.alert-action {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alert-action:hover {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .health-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .health-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .health-header h2 {
+    justify-content: center;
+  }
+}

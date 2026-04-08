@@ -84,6 +84,31 @@ COMMENT ON TABLE alert_history IS 'Audit trail for all changes to alerts';
 COMMENT ON TABLE transaction_cache IS 'Cache for idempotency - prevents duplicate processing';
 COMMENT ON TABLE transaction_metrics IS 'Monitoring metrics for transaction processing';
 
+-- Create Dead Letter Queue table for failed message handling
+CREATE TABLE IF NOT EXISTS dead_letter_messages (
+    id BIGSERIAL PRIMARY KEY,
+    transaction_id VARCHAR(100),
+    original_message TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'RETRYING', 'RESOLVED', 'DEAD')),
+    error_message TEXT,
+    error_stacktrace TEXT,
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 3,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_retry_at TIMESTAMP,
+    resolved_at TIMESTAMP,
+    resolution_notes TEXT
+);
+
+-- Create indexes on dead_letter_messages for performance
+CREATE INDEX IF NOT EXISTS idx_dlq_status ON dead_letter_messages(status);
+CREATE INDEX IF NOT EXISTS idx_dlq_created_at ON dead_letter_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dlq_status_created ON dead_letter_messages(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dlq_transaction_id ON dead_letter_messages(transaction_id);
+
+COMMENT ON TABLE dead_letter_messages IS 'Dead Letter Queue - stores failed messages for retry processing';
+
 -- Grant permissions to application user
 DO $$
 DECLARE

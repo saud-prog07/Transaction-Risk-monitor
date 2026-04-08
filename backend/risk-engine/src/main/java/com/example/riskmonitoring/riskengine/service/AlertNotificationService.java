@@ -2,6 +2,7 @@ package com.example.riskmonitoring.riskengine.service;
 
 import com.example.riskmonitoring.common.models.RiskResult;
 import com.example.riskmonitoring.common.models.Transaction;
+import com.example.riskmonitoring.riskengine.service.MetricsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -10,8 +11,8 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 
@@ -33,14 +34,17 @@ public class AlertNotificationService {
     private final RestTemplate restTemplate;
     private final String alertServiceBaseUrl;
     private final int alertTimeoutMs;
+    private final MetricsService metricsService;
 
     public AlertNotificationService(
             RestTemplate restTemplate,
             @Value("${alert-service.base-url:http://localhost:8082}") String alertServiceBaseUrl,
-            @Value("${alert-service.timeout-ms:10000}") int alertTimeoutMs) {
+            @Value("${alert-service.timeout-ms:10000}") int alertTimeoutMs,
+            MetricsService metricsService) {
         this.restTemplate = restTemplate;
         this.alertServiceBaseUrl = alertServiceBaseUrl;
         this.alertTimeoutMs = alertTimeoutMs;
+        this.metricsService = metricsService;
         log.info("AlertNotificationService initialized - BaseURL: {}, Timeout: {}ms",
                 alertServiceBaseUrl, alertTimeoutMs);
     }
@@ -85,6 +89,8 @@ public class AlertNotificationService {
             if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("Alert sent successfully to alert-service - TransactionId: {}, Status: {}",
                         transactionId, response.getStatusCode());
+                // Increment flagged count metric for successful alert
+                metricsService.incrementFlaggedCount();
             } else {
                 log.warn("Unexpected status from alert-service - Status: {}, TransactionId: {}",
                         response.getStatusCode(), transactionId);

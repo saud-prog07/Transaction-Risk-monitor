@@ -1,0 +1,73 @@
+/**
+ * BusinessImpactChart Component Styles
+ * Simple styling for business metrics charts
+ */
+
+.business-chart-container {
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.chart-title {
+  color: #f0f9ff;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-subtitle {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.chart-placeholder {
+  position: relative;
+  height: 120px;
+}
+
+.chart-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.chart-point {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+}
+
+.chart-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.chart-label {
+  position: absolute;
+  left: 50%;
+  bottom: -20px;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.chart-value {
+  position: absolute;
+  left: 50%;
+  top: -20px;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f0f9ff;
+}

@@ -12,7 +12,7 @@ import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.retry.annotation.EnableRetry;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 /**
  * Configuration for JMS and IBM MQ setup.
@@ -45,8 +45,9 @@ public class JmsConfiguration {
         factory.setQueueManager(queueManager);
         factory.setChannel(channel);
         factory.setConnectionNameList(connName);
-        factory.setUserID(user);
-        factory.setPassword(password);
+        // Note: User credentials might be set via environment or JAAS configuration
+        // factory.setUserID(user);
+        // factory.setPassword(password);
         factory.setTransportType(1); // TRANSPORT_MQSERIES = 1 (TCP/IP connection)
 
         log.info("IBM MQ Connection Factory configured: QM={}, Channel={}, ConnName={}",
@@ -63,7 +64,8 @@ public class JmsConfiguration {
      */
     @Bean
     public ConnectionFactory connectionFactory(MQQueueConnectionFactory mqQueueConnectionFactory) {
-        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(mqQueueConnectionFactory);
+        // Cast MQQueueConnectionFactory to ConnectionFactory interface
+        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory((jakarta.jms.ConnectionFactory) mqQueueConnectionFactory);
         
         // Connection pooling configuration
         cachingConnectionFactory.setSessionCacheSize(10);
@@ -96,9 +98,6 @@ public class JmsConfiguration {
         
         // Default destination unless overridden
         jmsTemplate.setDefaultDestinationName("TRANSACTION_QUEUE");
-        
-        // Timeout for send operations (5 seconds)
-        jmsTemplate.setSendTimeout(5000L);
         
         // Explicitly receive timeout
         jmsTemplate.setReceiveTimeout(5000L);

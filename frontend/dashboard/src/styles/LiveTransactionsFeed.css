@@ -1,0 +1,291 @@
+.live-feed-container {
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.feed-header {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feed-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.feed-meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.feed-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.transaction-count,
+.processing-count {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.feed-loading {
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.transactions-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.no-transactions {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.transaction-item:hover {
+  background: #f9fafb;
+}
+
+.transaction-item.flagged {
+  background: #fee2e2;
+  border-left: 4px solid #ef4444;
+  padding-left: 12px;
+}
+
+.transaction-item.flagged:hover {
+  background: #fecaca;
+}
+
+.transaction-item.high {
+  border-left: 3px solid #ef4444;
+}
+
+.transaction-item.medium {
+  border-left: 3px solid #f59e0b;
+}
+
+.transaction-item.low {
+  border-left: 3px solid #3b82f6;
+}
+
+.flagged-indicator {
+  position: absolute;
+  left: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.flag-icon {
+  font-size: 14px;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.tx-icon {
+  font-size: 18px;
+  min-width: 24px;
+}
+
+.tx-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tx-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.tx-id {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+}
+
+.risk-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.risk-badge.low {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.risk-badge.medium {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.risk-badge.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tx-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  font-size: 12px;
+}
+
+.detail-group {
+  display: flex;
+  gap: 6px;
+}
+
+.detail-label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.detail-value-amount {
+  color: #10b981;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.tx-action {
+  display: flex;
+  gap: 8px;
+}
+
+.view-btn {
+  padding: 4px 8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-btn:hover {
+  background: #dc2626;
+}
+
+.feed-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  background: #f9fafb;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.footer-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-value {
+  color: #1f2937;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.stat-value.error {
+  color: #ef4444;
+}
+
+/* Scrollbar styling */
+.transactions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.transactions-list::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.transactions-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.transactions-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
