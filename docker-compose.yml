@@ -1,0 +1,248 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database for Alert Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: risk-monitoring-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:=riskmonitor}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:=secure_password}
+      POSTGRES_DB: ${DB_NAME:=risk_monitoring_db}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      # Initialize database with schema
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      # Persist data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - risk-monitoring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:=riskmonitor}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # IBM MQ Message Broker
+  ibm-mq:
+    image: icr.io/ibm-messaging/mq:latest
+    container_name: risk-monitoring-mq
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QMGR
+      MQ_APP_PASSWORD: ${MQ_PASSWORD:=passw0rd}
+      MQ_ADMIN_PASSWORD: ${MQ_ADMIN_PASSWORD:=passw0rd}
+      MQ_DEV: "true"
+    ports:
+      # MQ Listener
+      - "1414:1414"
+      # IBM MQ Console (optional)
+      - "9443:9443"
+    volumes:
+      # Persist MQ data
+      - mq_data:/mnt/mqm
+    networks:
+      - risk-monitoring-network
+    healthcheck:
+      test: ["CMD", "runmqsc", "-w", "5", "-e", "QMGR"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Producer Service
+  producer-service:
+    build:
+      context: .
+      dockerfile: producer-service/Dockerfile
+    image: risk-monitoring/producer-service:latest
+    container_name: risk-monitoring-producer
+    depends_on:
+      ibm-mq:
+        condition: service_healthy
+    environment:
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:=docker}
+      SPRING_APPLICATION_NAME: producer-service
+      
+      # Server configuration
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /api
+      
+      # IBM MQ configuration
+      MQ_HOST: ibm-mq
+      MQ_PORT: 1414
+      MQ_QMGR: QMGR
+      MQ_CHANNEL: DEV.APP.SVRCONN
+      MQ_USER: ${MQ_USER:=app}
+      MQ_PASSWORD: ${MQ_PASSWORD:=passw0rd}
+      MQ_QUEUE_NAME: TRANSACTION_QUEUE
+      
+      # JMS configuration
+      SPRING_JMS_ACTIVEMQ_BROKER_URL: tcp://ibm-mq:61616
+      
+      # Actuator/Monitoring
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,metrics,info"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when-authorized
+    ports:
+      - "8080:8080"
+    networks:
+      - risk-monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Risk Engine Service
+  risk-engine:
+    build:
+      context: .
+      dockerfile: risk-engine/Dockerfile
+    image: risk-monitoring/risk-engine:latest
+    container_name: risk-monitoring-risk-engine
+    depends_on:
+      ibm-mq:
+        condition: service_healthy
+    environment:
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:=docker}
+      SPRING_APPLICATION_NAME: risk-engine
+      
+      # Server configuration
+      SERVER_PORT: 8081
+      SERVER_SERVLET_CONTEXT_PATH: /api
+      
+      # IBM MQ configuration
+      MQ_HOST: ibm-mq
+      MQ_PORT: 1414
+      MQ_QMGR: QMGR
+      MQ_CHANNEL: DEV.APP.SVRCONN
+      MQ_USER: ${MQ_USER:=app}
+      MQ_PASSWORD: ${MQ_PASSWORD:=passw0rd}
+      MQ_QUEUE_NAME: TRANSACTION_QUEUE
+      MQ_ALERT_QUEUE_NAME: ALERT_QUEUE
+      
+      # JMS configuration
+      SPRING_JMS_ACTIVEMQ_BROKER_URL: tcp://ibm-mq:61616
+      
+      # Risk Analysis configuration
+      RISK_ENGINE_THRESHOLD_HIGH: ${RISK_THRESHOLD_HIGH:=0.8}
+      RISK_ENGINE_THRESHOLD_MEDIUM: ${RISK_THRESHOLD_MEDIUM:=0.5}
+      
+      # Actuator/Monitoring
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,metrics,info"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when-authorized
+    ports:
+      - "8081:8081"
+    networks:
+      - risk-monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Alert Service
+  alert-service:
+    build:
+      context: .
+      dockerfile: alert-service/Dockerfile
+    image: risk-monitoring/alert-service:latest
+    container_name: risk-monitoring-alert
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ibm-mq:
+        condition: service_healthy
+    environment:
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:=docker}
+      SPRING_APPLICATION_NAME: alert-service
+      
+      # Server configuration
+      SERVER_PORT: 8082
+      SERVER_SERVLET_CONTEXT_PATH: /api
+      
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:=risk_monitoring_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:=riskmonitor}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:=secure_password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${DB_DDL_AUTO:=validate}
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQL10Dialect
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE: "20"
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_INSERTS: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_UPDATES: "true"
+      
+      # IBM MQ configuration
+      MQ_HOST: ibm-mq
+      MQ_PORT: 1414
+      MQ_QMGR: QMGR
+      MQ_CHANNEL: DEV.APP.SVRCONN
+      MQ_USER: ${MQ_USER:=app}
+      MQ_PASSWORD: ${MQ_PASSWORD:=passw0rd}
+      MQ_ALERT_QUEUE_NAME: ALERT_QUEUE
+      
+      # JMS configuration
+      SPRING_JMS_ACTIVEMQ_BROKER_URL: tcp://ibm-mq:61616
+      
+      # Actuator/Monitoring
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,metrics,info"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when-authorized
+    ports:
+      - "8082:8082"
+    networks:
+      - risk-monitoring-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8082/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Shared Docker network for inter-service communication
+networks:
+  risk-monitoring-network:
+    driver: bridge
+    name: risk-monitoring-network
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+  mq_data:
+    driver: local

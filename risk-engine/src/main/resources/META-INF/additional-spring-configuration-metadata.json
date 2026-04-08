@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "alert-service.base-url",
+      "type": "java.lang.String",
+      "description": "Base URL for the alert service."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# IDE and Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.classpath
+.project
+.settings
+
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+.flattened-pom.xml
+
+# Build outputs
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+
+# Logs
+logs/
+*.log
+
+# Documentation
+*.md
+docs/
+
+# Testing
+src/test/
+**/test/
+*.test.js
+coverage/
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerfile
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS specific
+Thumbs.db
+.DS_Store
+._*

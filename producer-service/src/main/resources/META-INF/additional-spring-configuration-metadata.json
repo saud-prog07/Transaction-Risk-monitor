@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "risk-engine.base-url",
+      "type": "java.lang.String",
+      "description": "Base URL for the risk engine service."
+    }
+  ]
+}

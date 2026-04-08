@@ -1,0 +1,652 @@
+# ============================================================================
+# REAL-TIME TRANSACTION RISK MONITORING SYSTEM - GITIGNORE
+# Company: Risk Monitoring Solutions Inc.
+# Purpose: Real-time fraud detection and transaction analysis platform
+# ============================================================================
+
+# ============================================================================
+# BUILD & COMPILATION ARTIFACTS
+# ============================================================================
+target/
+build/
+out/
+dist/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ============================================================================
+# MAVEN
+# ============================================================================
+.m2/
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+pom.xml.versionsBackup
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# ============================================================================
+# GRADLE
+# ============================================================================
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
+
+# ============================================================================
+# IDE & EDITOR FILES
+# ============================================================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+out/
+*.sublime-project
+*.sublime-workspace
+
+# VS Code
+.vscode/
+*.code-workspace
+.vscode-test
+.history/
+
+# Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+.c9/
+*.launch
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Visual Studio
+.vs/
+.vscache
+*.sln.docstates
+*.vcxproj.filters
+*.vcxproj.user
+
+# Vim & Emacs
+*~
+.swp
+.swo
+*#
+.emacs.d/
+TAGS
+
+# ============================================================================
+# OPERATING SYSTEM FILES
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.exe
+
+# Linux
+.Xauthority
+.serverauth.*
+
+# ============================================================================
+# DEPENDENCIES & LIBRARIES
+# ============================================================================
+node_modules/
+npm-debug.log
+npm-debug.log.*
+yarn-error.log
+package-lock.json
+yarn.lock
+.bundlelog
+
+# ============================================================================
+# ENVIRONMENT & CONFIGURATION FILES (SECRETS)
+# ============================================================================
+
+# Environment variables - NEVER commit these
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.backup
+
+# Application properties with secrets
+application.properties
+application-*.properties
+application.yml
+application-*.yml
+
+# Configuration files with sensitive data
+config.json
+config.yaml
+config.properties
+secrets.json
+secrets.yml
+credentials.json
+credentials.properties
+
+# AWS, GCP, Azure credentials
+.aws/
+.gcp/
+.azure/
+credentials/
+serviceAccountKey.json
+accessKeys.json
+
+# Database credentials
+db.properties
+database.properties
+database.yml
+
+# ============================================================================
+# LOGS & OUTPUT
+# ============================================================================
+
+logs/
+*.log
+*.log.*
+*.out
+nohup.out
+*.trace
+*.dump
+catalina.out
+spring.log
+error.log
+debug.log
+info.log
+warn.log
+
+# ============================================================================
+# TEMPORARY & CACHE FILES
+# ============================================================================
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+tmp/
+temp/
+cache/
+.cache/
+.tmp/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# ============================================================================
+# DOCKER & CONTAINER FILES
+# ============================================================================
+
+# Local docker environment
+docker-compose.override.yml
+.dockerignore.bak
+Dockerfile.dev
+Dockerfile.local
+docker-compose.dev.yml
+docker-compose.local.yml
+
+# Docker volumes
+postgres_data/
+mq_data/
+mongodb_data/
+redis_data/
+*.img
+*.vmdk
+
+# ============================================================================
+# DATABASE FILES
+# ============================================================================
+
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+*.accdb
+*.backup
+*.backup.*
+database_backup/
+db_backups/
+*.sql.gz
+*.sql.bak
+*.sql.backup
+
+# ============================================================================
+# TEST COVERAGE & REPORTS
+# ============================================================================
+
+coverage/
+jacoco.exec
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+.hypothesis/
+*.lcov
+lcov-result.json
+coverage-summary.json
+test-results/
+test-reports/
+junit-reports/
+
+# ============================================================================
+# BUILD REPORTS & ARTIFACTS
+# ============================================================================
+
+reports/
+docs/generated/
+javadoc/
+site/
+*.surefire-report.html
+checkstyle-result.xml
+findbugs-report.xml
+pmd-report.xml
+sonar-project.properties
+
+# ============================================================================
+# IDE GENERATED ARTIFACTS
+# ============================================================================
+
+.factorypath
+.classpath
+.jproject
+.springBeans
+.sts4-cache/
+.apt_generated/
+.apt_generated_tests/
+.tern-port
+.devcontainer/
+.DS_Store
+
+# ============================================================================
+# NODEJS & NPM
+# ============================================================================
+
+node_modules/
+package-lock.json
+yarn.lock
+.npm-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-errors.json
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+*.py[cod]
+*$py.class
+*.egg
+*.egg-info
+dist/
+build/
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.tox/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+__pycache__/
+
+# ============================================================================
+# KUBERNETES & ORCHESTRATION
+# ============================================================================
+
+k8s/secrets/
+k8s/*.local.yaml
+k8s/dev/
+helm/values-local.yaml
+helm/values-dev.yaml
+kubeconfig
+.kube/config
+minikube/
+
+# ============================================================================
+# CI/CD & AUTOMATION
+# ============================================================================
+
+.github/workflows/secrets.yml
+.gitlab-ci-local.yml
+.travis-local.yml
+Jenkinsfile.local
+.circleci/secrets.yml
+azure-pipelines-local.yml
+build-artifacts/
+deployment-logs/
+
+# ============================================================================
+# CRASH DUMPS & MEMORY DUMPS
+# ============================================================================
+
+hs_err_pid*.log
+*.crash
+*.core
+core.*
+vgcore.*
+
+# ============================================================================
+# IDE PLUGIN DATA
+# ============================================================================
+
+.idea/sonarlintcache/
+.idea/runConfigurations/
+.idea/projectDictionary/
+.vscode/launch.json
+
+# ============================================================================
+# SONARQUBE & CODE QUALITY
+# ============================================================================
+
+.sonarqube/
+.scannerwork/
+sonar-project.properties.bak
+
+# ============================================================================
+# INTELLIJ SPECIFIC
+# ============================================================================
+
+*.iml
+.idea/
+.idea/artifacts/
+.idea/compiler.xml
+.idea/dataSources/
+.idea/dataSources.ids
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/dictionaries/
+.idea/encodings.xml
+.idea/inspectionProfiles/
+.idea/libraries/
+.idea/modules/
+.idea/uiDesigner.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/*.xml
+
+# ============================================================================
+# SECURITY & SENSITIVE DATA
+# ============================================================================
+
+# Private keys
+*.pem
+*.key
+*.p12
+*.p8
+*.pkcs12
+*.jks
+*.keystore
+*.truststore
+id_rsa
+id_rsa.pub
+known_hosts
+
+# API keys & tokens
+.api_keys
+api_keys.json
+access_token
+refresh_token
+oauth_token
+jwt_secret
+
+# SSH keys
+.ssh/
+ssh_keys/
+authorized_keys
+
+# Encryption keys
+encryption_keys/
+*.enc
+*.gpg
+
+# ============================================================================
+# BACKUP FILES
+# ============================================================================
+
+*.bak
+*.backup
+*~
+*.orig
+*.tmp
+*.temp
+*.swp
+*.swo
+.#*
+*#
+backup/
+backups/
+
+# ============================================================================
+# TASK RUNNER FILES
+# ============================================================================
+
+gulp-config.local.js
+gulpfile.bak
+Gruntfile.local.js
+webpack.config.local.js
+webpack.config.development.js
+
+# ============================================================================
+# MISC FILES & DIRECTORIES
+# ============================================================================
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE
+.recommenders/
+.c9/
+eclipse.ini
+*.sublime-workspace
+*.sublime-project
+.vscode-test
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary test files
+test-output/
+test-data/
+test-results/
+test-reports/
+
+# Application runtime directories
+run/
+var/
+tmp/
+temp/
+.work/
+
+# Generated API docs
+generated-docs/
+generated-sources/
+generated-tests/
+
+# Version control
+.git/
+.gitmodules
+.hg/
+.svn/
+CVS/
+
+# ============================================================================
+# PROJECT SPECIFIC EXCLUSIONS
+# ============================================================================
+
+# Local development overrides
+local.properties
+local.yml
+dev.properties
+
+# Build outputs
+classes/
+bin/
+lib/
+
+# Plugin files
+pluginResources/
+plugin-classes/
+
+# Runtime directories
+.tomcat-work/
+work/
+
+# Temporary upload directories
+uploads/
+temp-uploads/
+upload-cache/
+
+# ============================================================================
+# DOCUMENTATION EXCLUSIONS (KEEP FOR GITHUB)
+# ============================================================================
+# Note: These are documented files that SHOULD be in the repo
+# !README.md
+# !*.md
+# !docs/
+# !ARCHITECTURE.md
+# !API-REFERENCE.md
+# !DATABASE-SETUP.md
+# !DEVELOPMENT.md
+
+# ============================================================================
+# GITHUB SPECIFIC
+# ============================================================================
+.github/workflows/secrets.yml
+.github/workflows/*.local.yml
+
+# ============================================================================
+# ARCHIVE EXTRACTION
+# ============================================================================
+extracted/
+unzipped/
+archives/
+
+# ============================================================================
+# DEVELOPMENT WORKFLOWS
+# ============================================================================
+
+.venv/
+.virtualenv/
+env.bak/
+venv.bak/
+.envrc
+.tool-versions
+.ruby-version
+.nvmrc
+
+# ============================================================================
+# MONITORING & OBSERVABILITY
+# ============================================================================
+
+prometheus/data/
+grafana/dashboards/
+grafana/datasources/
+elasticsearch/data/
+kibana/
+jaeger/
+loki/
+
+# ============================================================================
+# MAIL & NOTIFICATIONS
+# ============================================================================
+
+mail/
+mail-logs/
+notification-logs/
+
+# ============================================================================
+# METRICS & ANALYTICS
+# ============================================================================
+
+metrics/
+analytics/
+.prometheus/
+.grafana/
+
+# ============================================================================
+# PERFORMANCE & PROFILING
+# ============================================================================
+
+*.jfr
+profiling/
+performance-logs/
+perf-data/
+
+# ============================================================================
+# DEPLOYMENT ARTIFACTS
+# ============================================================================
+
+.deployment/
+deployment-history/
+release-notes/
+changelog/
+
+# ============================================================================
+# VENDOR & THIRD-PARTY
+# ============================================================================
+
+vendor/
+libs/
+external/
+third-party/
+
+# ============================================================================
+# FINAL CATCH-ALL (Optional, uncomment if needed)
+# ============================================================================
+# __pycache__/
+# *.egg-info/
+# .tox/
+# .coverage
+# htmlcov/
