@@ -1,0 +1,26 @@
+/* RiskBadge Styles */
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.risk-badge:hover {
+  box-shadow: var(--shadow-md);
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .risk-badge {
+    font-size: var(--font-size-xs);
+    padding: 2px 8px;
+  }
+}

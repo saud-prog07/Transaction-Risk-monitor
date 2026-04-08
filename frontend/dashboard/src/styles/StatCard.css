@@ -1,0 +1,124 @@
+/* StatCard Styles */
+
+.stat-card {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Icons */
+
+.stat-card__icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* Content */
+
+.stat-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-card__title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.stat-card__value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-dark);
+}
+
+.stat-card__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin: var(--spacing-xs) 0 0 0;
+}
+
+/* Color Variants */
+
+.stat-card--primary {
+  border-left-color: var(--color-secondary);
+
+  .stat-card__icon {
+    color: var(--color-secondary);
+  }
+
+  .stat-card__value {
+    color: var(--color-secondary);
+  }
+}
+
+.stat-card--success {
+  border-left-color: var(--color-success);
+
+  .stat-card__icon {
+    color: var(--color-success);
+  }
+
+  .stat-card__value {
+    color: var(--color-success);
+  }
+}
+
+.stat-card--warning {
+  border-left-color: var(--color-warning);
+
+  .stat-card__icon {
+    color: var(--color-warning);
+  }
+
+  .stat-card__value {
+    color: var(--color-warning);
+  }
+}
+
+.stat-card--danger {
+  border-left-color: var(--color-danger);
+
+  .stat-card__icon {
+    color: var(--color-danger);
+  }
+
+  .stat-card__value {
+    color: var(--color-danger);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-card__icon {
+    font-size: 24px;
+    margin: 0 auto;
+  }
+
+  .stat-card__title,
+  .stat-card__subtitle {
+    text-align: center;
+  }
+}
