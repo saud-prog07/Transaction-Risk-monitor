@@ -552,8 +552,9 @@ upload-cache/
 # ============================================================================
 # DOCUMENTATION EXCLUSIONS
 # ============================================================================
-# Exclude all markdown files from GitHub
+# Exclude all markdown files from GitHub except README
 *.md
+!README.md
 
 # ============================================================================
 # GITHUB SPECIFIC
