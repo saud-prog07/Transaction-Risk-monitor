@@ -136,6 +136,7 @@ yarn.lock
 # ============================================================================
 
 # Environment variables - NEVER commit these
+*.env
 .env
 .env.local
 .env.*.local
@@ -549,16 +550,10 @@ temp-uploads/
 upload-cache/
 
 # ============================================================================
-# DOCUMENTATION EXCLUSIONS (KEEP FOR GITHUB)
+# DOCUMENTATION EXCLUSIONS
 # ============================================================================
-# Note: These are documented files that SHOULD be in the repo
-# !README.md
-# !*.md
-# !docs/
-# !ARCHITECTURE.md
-# !API-REFERENCE.md
-# !DATABASE-SETUP.md
-# !DEVELOPMENT.md
+# Exclude all markdown files from GitHub
+*.md
 
 # ============================================================================
 # GITHUB SPECIFIC
