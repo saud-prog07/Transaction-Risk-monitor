@@ -4,7 +4,11 @@ import com.example.riskmonitoring.alertservice.domain.AlertEntity;
 import com.example.riskmonitoring.alertservice.domain.AuditAction;
 import com.example.riskmonitoring.alertservice.domain.AuditLog;
 import com.example.riskmonitoring.alertservice.dto.AuditLogDTO;
+import com.example.riskmonitoring.alertservice.exception.ForbiddenException;
+import com.example.riskmonitoring.alertservice.exception.ResourceNotFoundException;
 import com.example.riskmonitoring.alertservice.repository.AuditLogRepository;
+import com.example.riskmonitoring.alertservice.repository.FlaggedTransactionRepository;
+import com.example.riskmonitoring.alertservice.security.AuthorizationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +22,10 @@ import java.util.stream.Collectors;
 /**
  * Service for recording and retrieving audit logs.
  * Provides comprehensive audit trail functionality for compliance and investigation.
+ * 
+ * Security: All audit log access is verified through AuthorizationService to prevent
+ * unauthorized access to audit trails. Users can only access audit logs they have
+ * permission to view based on role and resource ownership.
  */
 @Service
 @Slf4j
@@ -25,9 +33,15 @@ import java.util.stream.Collectors;
 public class AuditService {
     
     private final AuditLogRepository auditLogRepository;
+    private final FlaggedTransactionRepository flaggedTransactionRepository;
+    private final AuthorizationService authorizationService;
     
-    public AuditService(AuditLogRepository auditLogRepository) {
+    public AuditService(AuditLogRepository auditLogRepository,
+                        FlaggedTransactionRepository flaggedTransactionRepository,
+                        AuthorizationService authorizationService) {
         this.auditLogRepository = auditLogRepository;
+        this.flaggedTransactionRepository = flaggedTransactionRepository;
+        this.authorizationService = authorizationService;
     }
     
     /**
@@ -116,24 +130,39 @@ public class AuditService {
     
     /**
      * Get audit trail for an alert by ID.
+     * Authorization: User must be owner of alert or have ADMIN/ANALYST role
      * 
      * @param alertId the alert ID
      * @param pageable pagination parameters
      * @return page of audit logs
+     * @throws ForbiddenException if user not authorized to access this alert's audit
+     * @throws ResourceNotFoundException if alert not found
      */
     public Page<AuditLogDTO> getAuditTrailByAlertId(Long alertId, Pageable pageable) {
+        // Verify authorization using AuthorizationService
+        authorizationService.verifyAlertAccess(alertId);
+        
         return auditLogRepository.findByAlertId(alertId, pageable)
                 .map(this::toDTO);
     }
     
     /**
      * Get audit logs by user.
+     * Authorization: Only ADMIN can access other users' logs. Users access their own logs.
      * 
      * @param userId the user ID
      * @param pageable pagination parameters
      * @return page of audit logs
+     * @throws ForbiddenException if user not authorized to access these logs
      */
     public Page<AuditLogDTO> getAuditLogsByUser(String userId, Pageable pageable) {
+        // Verify authorization - users can only access their own or ADMIN can access all
+        if (!authorizationService.isAuthorizedForUserAudit(Long.parseLong(userId))) {
+            String currentUser = authorizationService.getCurrentUsername();
+            log.warn("Unauthorized attempt to access audit logs for user {} by {}", userId, currentUser);
+            throw new ForbiddenException("You do not have permission to access these audit logs");
+        }
+        
         return auditLogRepository.findByUserIdOrderByTimestampDesc(userId, pageable)
                 .map(this::toDTO);
     }
@@ -154,11 +183,17 @@ public class AuditService {
     
     /**
      * Get all status changes for an alert.
+     * Authorization: User must be owner of alert or have ADMIN/ANALYST role
      * 
      * @param alertId the alert ID
      * @return list of status change audit logs
+     * @throws ForbiddenException if user not authorized
+     * @throws ResourceNotFoundException if alert not found
      */
     public List<AuditLogDTO> getStatusHistory(Long alertId) {
+        // Verify authorization using AuthorizationService
+        authorizationService.verifyAlertAccess(alertId);
+        
         return auditLogRepository.findStatusTransitions(alertId)
                 .stream()
                 .map(this::toDTO)

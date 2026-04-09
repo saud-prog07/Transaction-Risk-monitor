@@ -104,6 +104,46 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles ForbiddenException (authorization failures).
+     * Returns 403 Forbidden without exposing resource existence details.
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(
+            ForbiddenException ex) {
+
+        log.warn("Access denied: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .message("Access denied")
+                .detail("You do not have permission to perform this action")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    /**
+     * Handles ResourceNotFoundException (resource not found or not authorized).
+     * Returns 404 Not Found without distinguishing between non-existent and unauthorized.
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+            ResourceNotFoundException ex) {
+
+        log.warn("Resource not found: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .message("Resource not found")
+                .detail("The requested resource could not be found")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
      * Handles generic runtime exceptions.
      */
     @ExceptionHandler(RuntimeException.class)

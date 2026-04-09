@@ -2,6 +2,7 @@ package com.example.riskmonitoring.riskengine.service;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.stereotype.Service;
 
 /**

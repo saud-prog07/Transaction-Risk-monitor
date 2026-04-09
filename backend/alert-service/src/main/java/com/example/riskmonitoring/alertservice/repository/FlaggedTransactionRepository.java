@@ -97,4 +97,60 @@ public interface FlaggedTransactionRepository extends JpaRepository<FlaggedTrans
      */
     @Query(value = "SELECT f FROM FlaggedTransaction f WHERE f.createdAt >= CURRENT_TIMESTAMP - INTERVAL :days DAY ORDER BY f.createdAt DESC")
     Page<FlaggedTransaction> findRecentTransactions(int days, Pageable pageable);
+
+    // ==================== USER-AWARE QUERY METHODS ====================
+    // These methods filter by user (createdBy) to prevent IDOR vulnerabilities
+    
+    /**
+     * Finds all flagged transactions created by a specific user.
+     * Used for regular users to see only their own alerts.
+     *
+     * @param createdBy the username who created the alert
+     * @param pageable pagination information
+     * @return page of flagged transactions created by the user
+     */
+    Page<FlaggedTransaction> findByCreatedBy(String createdBy, Pageable pageable);
+
+    /**
+     * Finds flagged transactions by risk level and creator.
+     * Used for regular users to filter their alerts by risk level.
+     *
+     * @param riskLevel the risk level
+     * @param createdBy the username who created the alert
+     * @param pageable pagination information
+     * @return page of flagged transactions
+     */
+    Page<FlaggedTransaction> findByRiskLevelAndCreatedBy(RiskLevel riskLevel, String createdBy, Pageable pageable);
+
+    /**
+     * Finds unreviewed flagged transactions created by a specific user.
+     * Used for regular users to see their own unreviewed alerts.
+     *
+     * @param createdBy the username who created the alert
+     * @param pageable pagination information
+     * @return page of unreviewed flagged transactions created by the user
+     */
+    Page<FlaggedTransaction> findByReviewedFalseAndCreatedBy(String createdBy, Pageable pageable);
+
+    /**
+     * Finds HIGH risk transactions created by a specific user.
+     * Used for regular users to see their own high-risk alerts.
+     *
+     * @param createdBy the username who created the alert
+     * @param pageable pagination information
+     * @return page of high risk transactions created by the user
+     */
+    @Query("SELECT f FROM FlaggedTransaction f WHERE f.riskLevel = 'HIGH' AND f.createdBy = :createdBy ORDER BY f.createdAt DESC")
+    Page<FlaggedTransaction> findHighRiskTransactionsByUser(String createdBy, Pageable pageable);
+
+    /**
+     * Finds MEDIUM risk transactions created by a specific user.
+     * Used for regular users to see their own medium-risk alerts.
+     *
+     * @param createdBy the username who created the alert
+     * @param pageable pagination information
+     * @return page of medium risk transactions created by the user
+     */
+    @Query("SELECT f FROM FlaggedTransaction f WHERE f.riskLevel = 'MEDIUM' AND f.createdBy = :createdBy ORDER BY f.createdAt DESC")
+    Page<FlaggedTransaction> findMediumRiskTransactionsByUser(String createdBy, Pageable pageable);
 }

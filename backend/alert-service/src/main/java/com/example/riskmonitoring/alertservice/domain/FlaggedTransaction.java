@@ -15,13 +15,19 @@ import java.util.UUID;
 /**
  * Entity representing a flagged high-risk transaction requiring attention.
  * Stores alert information for compliance, investigation, and reporting.
+ * 
+ * Security:
+ * - All access is verified through AuthorizationService
+ * - created_by field tracks who created the alert
+ * - Users can only access alerts they have permissions for
  */
 @Entity
 @Table(name = "flagged_transactions", indexes = {
         @Index(name = "idx_transaction_id", columnList = "transaction_id", unique = true),
         @Index(name = "idx_risk_level", columnList = "risk_level"),
         @Index(name = "idx_created_at", columnList = "created_at"),
-        @Index(name = "idx_risk_level_created", columnList = "risk_level,created_at")
+        @Index(name = "idx_risk_level_created", columnList = "risk_level,created_at"),
+        @Index(name = "idx_created_by", columnList = "created_by")
 })
 @Data
 @NoArgsConstructor
@@ -48,6 +54,13 @@ public class FlaggedTransaction {
 
     @Column(nullable = false)
     private Instant updatedAt;
+
+    /**
+     * User ID who created this alert.
+     * Used for ownership verification and access control.
+     */
+    @Column(nullable = false, length = 255)
+    private String createdBy;
 
     /**
      * Flag to track if this alert has been reviewed.

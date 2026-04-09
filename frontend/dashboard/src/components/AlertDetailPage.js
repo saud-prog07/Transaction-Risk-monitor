@@ -10,7 +10,16 @@ import '../styles/AlertDetailPage.css';
  * - Investigation notes field
  * - Status update buttons (REVIEWED, FRAUD, SAFE)
  * - Audit trail showing all actions
+ * 
+ * Security:
+ * - API_BASE_URL from environment variables (REACT_APP_API_URL)
+ * - Never hardcode localhost or API endpoints in code
+ * - All API calls use configured base URL
  */
+
+// Use environment variable or fallback to relative URLs (NOT hardcoded localhost)
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+
 const AlertDetailPage = ({ onClose }) => {
   const { alertId } = useParams();
   const navigate = useNavigate();
@@ -36,7 +45,7 @@ const AlertDetailPage = ({ onClose }) => {
           ? '/api/alerts' 
           : '/api/alerts';
         
-        const response = await fetch(`http://localhost:8082${basePath}/${alertId}`);
+        const response = await fetch(`${API_BASE_URL}${basePath}/${alertId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch alert details');
         }
@@ -45,7 +54,7 @@ const AlertDetailPage = ({ onClose }) => {
         setInvestigationNotes(alertData.investigation_notes || '');
 
         // Fetch audit logs
-        const auditResponse = await fetch(`http://localhost:8082${basePath}/${alertId}/audit-log?page=0&size=50`);
+        const auditResponse = await fetch(`${API_BASE_URL}${basePath}/${alertId}/audit-log?page=0&size=50`);
         if (auditResponse.ok) {
           const auditData = await auditResponse.json();
           setAuditLogs(auditData.content || []);
@@ -71,7 +80,7 @@ const AlertDetailPage = ({ onClose }) => {
        setError(null);
 
        const basePath = '/api/alerts';
-       const response = await fetch(`http://localhost:8082${basePath}/${alertId}/status`, {
+       const response = await fetch(`${API_BASE_URL}${basePath}/${alertId}/status`, {
          method: 'PUT',
          headers: {
            'Content-Type': 'application/json',
@@ -96,7 +105,7 @@ const AlertDetailPage = ({ onClose }) => {
        setInvestigationNotes(updatedAlert.investigation_notes || '');
 
        // Refresh audit logs
-       const auditResponse = await fetch(`http://localhost:8082${basePath}/${alertId}/audit-log?page=0&size=50`);
+       const auditResponse = await fetch(`${API_BASE_URL}${basePath}/${alertId}/audit-log?page=0&size=50`);
        if (auditResponse.ok) {
          const auditData = await auditResponse.json();
          setAuditLogs(auditData.content || []);
@@ -117,7 +126,7 @@ const AlertDetailPage = ({ onClose }) => {
        setError(null);
 
        const basePath = '/api/alerts';
-       const response = await fetch(`http://localhost:8082${basePath}/${alertId}/investigate`, {
+       const response = await fetch(`${API_BASE_URL}${basePath}/${alertId}/investigate`, {
          method: 'PUT',
          headers: {
            'Content-Type': 'application/json',
@@ -138,7 +147,7 @@ const AlertDetailPage = ({ onClose }) => {
        setInvestigationNotes(updatedAlert.investigation_notes || '');
 
        // Refresh audit logs
-       const auditResponse = await fetch(`http://localhost:8082${basePath}/${alertId}/audit-log?page=0&size=50`);
+       const auditResponse = await fetch(`${API_BASE_URL}${basePath}/${alertId}/audit-log?page=0&size=50`);
        if (auditResponse.ok) {
          const auditData = await auditResponse.json();
          setAuditLogs(auditData.content || []);

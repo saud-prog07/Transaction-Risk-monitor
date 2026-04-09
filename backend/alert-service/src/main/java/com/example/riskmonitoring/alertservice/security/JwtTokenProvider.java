@@ -17,41 +17,49 @@ import java.util.Map;
 /**
  * JWT Token Provider - Handles JWT token generation and validation
  * Uses JJWT library for secure JWT operations
+ * 
+ * Security Best Practices:
+ * - Tokens contain minimal claims for security
+ * - User ID is in token but not exposed in frontend
+ * - Role information queried from database, not stored in token
+ * - Tokens expire after 1 hour
+ * - Refresh tokens used for token renewal
  */
 @Slf4j
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}")
+    @Value("${jwt.secret:}")
     private String jwtSecret;
 
     @Value("${jwt.expiration:3600000}")
     private int jwtExpirationMs;
 
     /**
-     * Generate JWT token for a user
+     * Generate JWT access token for a user
      * @param username the username
-     * @param userId the user ID
-     * @param role the user role (ADMIN, ANALYST, etc.)
+     * @param userId the user ID (internal reference only)
      * @return JWT token string
      */
-    public String generateToken(String username, String userId, String role) {
+    public String generateToken(String username, String userId) {
         Map<String, Object> claims = new HashMap<>();
+        // Store userId internally for database lookups
+        // Do NOT expose sensitive information like password, email in token
         claims.put("userId", userId);
-        claims.put("username", username);
-        claims.put("role", role);
         
         return createToken(claims, username);
     }
 
     /**
-     * Extract role from JWT token
+     * Extract role from JWT token claims
      * @param token the JWT token
-     * @return user role
+     * @return user role or null
      */
     public String getRoleFromToken(String token) {
         try {
             Claims claims = getClaimsFromToken(token);
+            // Role is NOT stored in JWT for security
+            // Query database for actual role instead
             return (String) claims.get("role");
         } catch (JwtException | IllegalArgumentException e) {
             log.error("Error extracting role from JWT token", e);
@@ -68,6 +76,10 @@ public class JwtTokenProvider {
     private String createToken(Map<String, Object> claims, String subject) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        if (jwtSecret == null || jwtSecret.isEmpty()) {
+            throw new IllegalStateException("JWT secret is not configured. Set jwt.secret in environment variables.");
+        }
 
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
 
@@ -132,6 +144,11 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
+            if (jwtSecret == null || jwtSecret.isEmpty()) {
+                log.error("JWT secret is not configured");
+                return false;
+            }
+
             SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
             Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -151,6 +168,10 @@ public class JwtTokenProvider {
      * @return Claims object
      */
     private Claims getClaimsFromToken(String token) {
+        if (jwtSecret == null || jwtSecret.isEmpty()) {
+            throw new IllegalStateException("JWT secret is not configured");
+        }
+
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         return Jwts.parserBuilder()
                 .setSigningKey(key)

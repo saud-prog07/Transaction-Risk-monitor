@@ -4,6 +4,7 @@ import com.example.riskmonitoring.alertservice.domain.AlertAuditLog;
 import com.example.riskmonitoring.alertservice.domain.AlertStatus;
 import com.example.riskmonitoring.alertservice.domain.FlaggedTransaction;
 import com.example.riskmonitoring.alertservice.dto.AlertAuditLogResponse;
+import com.example.riskmonitoring.alertservice.dto.AlertInvestigateRequest;
 import com.example.riskmonitoring.alertservice.dto.AlertRequest;
 import com.example.riskmonitoring.alertservice.dto.AlertResponse;
 import com.example.riskmonitoring.alertservice.dto.AlertStatusUpdateRequest;
@@ -11,6 +12,7 @@ import com.example.riskmonitoring.alertservice.exception.AlertAlreadyExistsExcep
 import com.example.riskmonitoring.alertservice.exception.AlertNotFoundException;
 import com.example.riskmonitoring.alertservice.repository.AlertAuditLogRepository;
 import com.example.riskmonitoring.alertservice.repository.FlaggedTransactionRepository;
+import com.example.riskmonitoring.alertservice.security.AuthorizationService;
 import com.example.riskmonitoring.common.logging.StructuredLogger;
 import com.example.riskmonitoring.common.models.RiskLevel;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,10 @@ import java.util.stream.Collectors;
 /**
  * Service for managing flagged transaction alerts.
  * Handles creation, retrieval, and updating of alert records with full audit logging.
+ * 
+ * Security: All data access is verified through AuthorizationService to prevent
+ * IDOR (Insecure Direct Object Reference) vulnerabilities. Users can only access
+ * alerts they have permission to view based on role and ownership.
  */
 @Slf4j
 @Service
@@ -38,14 +44,17 @@ public class AlertService {
     private final FlaggedTransactionRepository flaggedTransactionRepository;
     private final AlertAuditLogRepository alertAuditLogRepository;
     private final NotificationService notificationService;
+    private final AuthorizationService authorizationService;
     private final StructuredLogger structuredLogger = StructuredLogger.getLogger(AlertService.class);
 
     public AlertService(FlaggedTransactionRepository flaggedTransactionRepository,
                         AlertAuditLogRepository alertAuditLogRepository,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                        AuthorizationService authorizationService) {
         this.flaggedTransactionRepository = flaggedTransactionRepository;
         this.alertAuditLogRepository = alertAuditLogRepository;
         this.notificationService = notificationService;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -70,10 +79,14 @@ public class AlertService {
         try {
             RiskLevel riskLevel = RiskLevel.valueOf(alertRequest.getRiskLevel().toUpperCase());
 
+            // Set createdBy to the authenticated user
+            String createdBy = authorizationService.getCurrentUsername();
+
             FlaggedTransaction flaggedTransaction = FlaggedTransaction.builder()
                     .transactionId(transactionId)
                     .riskLevel(riskLevel)
                     .reason(alertRequest.getReason())
+                    .createdBy(createdBy)
                     .status(AlertStatus.NEW)
                     .build();
 
@@ -81,12 +94,13 @@ public class AlertService {
 
             // Create audit log for alert creation
             createAuditLog(saved, "CREATED", AlertStatus.NEW.toString(), AlertStatus.NEW.toString(),
-                    "Alert created for flagged transaction", null, "SYSTEM");
+                    "Alert created for flagged transaction", null, createdBy);
 
             Map<String, Object> flaggedContext = new HashMap<>();
             flaggedContext.put("event", "TRANSACTION_FLAGGED");
             flaggedContext.put("riskLevel", riskLevel.toString());
             flaggedContext.put("reason", alertRequest.getReason());
+            flaggedContext.put("createdBy", createdBy);
             structuredLogger.info("Transaction flagged and alert created", flaggedContext);
 
             notificationService.notifyFlaggedTransaction(saved);
@@ -106,6 +120,7 @@ public class AlertService {
             structuredLogger.error("Failed to create alert", errorContext, ex);
             throw new RuntimeException("Failed to create alert: " + ex.getMessage(), ex);
         }
+    }
     
     /**
      * Exports flagged transactions to CSV format.
@@ -120,21 +135,12 @@ public class AlertService {
         // CSV Header
         csvBuilder.append("Alert ID,Transaction ID,Risk Level,Reason,Status,Created At,Updated At,Investigated By,Investigation Notes\n");
         
-        // Get filtered alerts
-        List<FlaggedTransaction> transactions;
-        if (status != null && !status.isEmpty() && riskLevel != null && !riskLevel.isEmpty()) {
-            transactions = flaggedTransactionRepository.findByStatusAndRiskLevel(
-                    AlertStatus.fromString(status), 
-                    RiskLevel.valueOf(riskLevel.toUpperCase()));
-        } else if (status != null && !status.isEmpty()) {
-            transactions = flaggedTransactionRepository.findByStatus(
-                    AlertStatus.fromString(status));
-        } else if (riskLevel != null && !riskLevel.isEmpty()) {
-            transactions = flaggedTransactionRepository.findByRiskLevel(
-                    RiskLevel.valueOf(riskLevel.toUpperCase()));
-        } else {
-            transactions = flaggedTransactionRepository.findAll();
-        }
+        // Get all alerts and filter in-memory
+        List<FlaggedTransaction> allTransactions = flaggedTransactionRepository.findAll();
+        List<FlaggedTransaction> transactions = allTransactions.stream()
+            .filter(t -> status == null || status.isEmpty() || t.getStatus().toString().equalsIgnoreCase(status))
+            .filter(t -> riskLevel == null || riskLevel.isEmpty() || t.getRiskLevel().toString().equalsIgnoreCase(riskLevel))
+            .collect(Collectors.toList());
         
         // Build CSV rows
         for (FlaggedTransaction transaction : transactions) {
@@ -163,32 +169,28 @@ public class AlertService {
         if (input == null) return "";
         return input.replace("\"", "\"\"");
     }
-}
 
     /**
      * Retrieves an alert by ID.
+     * Authorization: User must be owner of alert or have ADMIN/ANALYST role
      *
      * @param alertId the alert ID
      * @return the alert response with audit logs
      * @throws AlertNotFoundException if the alert does not exist
+     * @throws ForbiddenException if user is not authorized to access the alert
      */
     @Transactional(readOnly = true)
     public AlertResponse getAlertById(Long alertId) {
-        FlaggedTransaction transaction = flaggedTransactionRepository.findById(alertId)
-                .orElseThrow(() -> {
-                    Map<String, Object> context = new HashMap<>();
-                    context.put("event", "ALERT_NOT_FOUND");
-                    context.put("alertId", alertId);
-                    structuredLogger.warn("Alert not found with ID", context);
-                    return new AlertNotFoundException("Alert not found with ID: " + alertId);
-                });
-
+        FlaggedTransaction transaction = authorizationService.verifyAlertAccess(alertId);
         structuredLogger.setTransactionId(transaction.getTransactionId().toString());
         return mapToResponse(transaction);
     }
 
     /**
      * Retrieves all flagged transactions with pagination.
+     * Authorization: 
+     * - ADMIN/ANALYST: can see all alerts
+     * - USER: can only see their own created alerts
      *
      * @param pageable pagination information
      * @return page of alert responses
@@ -199,13 +201,31 @@ public class AlertService {
         context.put("event", "FETCH_ALL_ALERTS");
         context.put("page", pageable.getPageNumber());
         context.put("size", pageable.getPageSize());
-        structuredLogger.debug("Fetching all alerts with pagination", context);
-        return flaggedTransactionRepository.findAll(pageable)
-                .map(this::mapToResponse);
+        
+        Page<FlaggedTransaction> results;
+        
+        // ADMIN and ANALYST can see all alerts
+        if (authorizationService.hasRole("ADMIN") || authorizationService.hasRole("ANALYST")) {
+            context.put("role", "ADMIN/ANALYST");
+            structuredLogger.debug("Fetching all alerts with pagination (elevated role)", context);
+            results = flaggedTransactionRepository.findAll(pageable);
+        } else {
+            // Regular users can only see their own alerts
+            String currentUsername = authorizationService.getCurrentUsername();
+            context.put("role", "USER");
+            context.put("user", currentUsername);
+            structuredLogger.debug("Fetching user alerts with pagination", context);
+            results = flaggedTransactionRepository.findByCreatedBy(currentUsername, pageable);
+        }
+        
+        return results.map(this::mapToResponse);
     }
 
     /**
      * Retrieves flagged transactions by risk level.
+     * Authorization:
+     * - ADMIN/ANALYST: can see all alerts at the risk level
+     * - USER: can only see their own created alerts at the risk level
      *
      * @param riskLevel the risk level to filter by
      * @param pageable pagination information
@@ -217,13 +237,29 @@ public class AlertService {
         context.put("event", "FETCH_ALERTS_BY_RISK");
         context.put("riskLevel", riskLevel.toString());
         context.put("page", pageable.getPageNumber());
-        structuredLogger.debug("Fetching alerts by risk level", context);
-        return flaggedTransactionRepository.findByRiskLevel(riskLevel, pageable)
-                .map(this::mapToResponse);
+        
+        Page<FlaggedTransaction> results;
+        
+        if (authorizationService.hasRole("ADMIN") || authorizationService.hasRole("ANALYST")) {
+            context.put("role", "ADMIN/ANALYST");
+            structuredLogger.debug("Fetching alerts by risk level (elevated role)", context);
+            results = flaggedTransactionRepository.findByRiskLevel(riskLevel, pageable);
+        } else {
+            String currentUsername = authorizationService.getCurrentUsername();
+            context.put("role", "USER");
+            context.put("user", currentUsername);
+            structuredLogger.debug("Fetching user alerts by risk level", context);
+            results = flaggedTransactionRepository.findByRiskLevelAndCreatedBy(riskLevel, currentUsername, pageable);
+        }
+        
+        return results.map(this::mapToResponse);
     }
 
     /**
      * Retrieves all unreviewed flagged transactions.
+     * Authorization:
+     * - ADMIN/ANALYST: can see all unreviewed alerts
+     * - USER: can only see their own unreviewed alerts
      *
      * @param pageable pagination information
      * @return page of unreviewed alert responses
@@ -233,13 +269,29 @@ public class AlertService {
         Map<String, Object> context = new HashMap<>();
         context.put("event", "FETCH_UNREVIEWED_ALERTS");
         context.put("page", pageable.getPageNumber());
-        structuredLogger.debug("Fetching unreviewed alerts", context);
-        return flaggedTransactionRepository.findByReviewedFalse(pageable)
-                .map(this::mapToResponse);
+        
+        Page<FlaggedTransaction> results;
+        
+        if (authorizationService.hasRole("ADMIN") || authorizationService.hasRole("ANALYST")) {
+            context.put("role", "ADMIN/ANALYST");
+            structuredLogger.debug("Fetching unreviewed alerts (elevated role)", context);
+            results = flaggedTransactionRepository.findByReviewedFalse(pageable);
+        } else {
+            String currentUsername = authorizationService.getCurrentUsername();
+            context.put("role", "USER");
+            context.put("user", currentUsername);
+            structuredLogger.debug("Fetching user unreviewed alerts", context);
+            results = flaggedTransactionRepository.findByReviewedFalseAndCreatedBy(currentUsername, pageable);
+        }
+        
+        return results.map(this::mapToResponse);
     }
 
     /**
      * Retrieves HIGH risk flagged transactions.
+     * Authorization:
+     * - ADMIN/ANALYST: can see all high-risk alerts
+     * - USER: can only see their own high-risk alerts
      *
      * @param pageable pagination information
      * @return page of high risk alert responses
@@ -248,10 +300,22 @@ public class AlertService {
     public Page<AlertResponse> getHighRiskAlerts(Pageable pageable) {
         Map<String, Object> context = new HashMap<>();
         context.put("event", "FETCH_HIGH_RISK_ALERTS");
-        context.put("page", pageable.getPageNumber());
-        structuredLogger.debug("Fetching high risk alerts", context);
-        return flaggedTransactionRepository.findHighRiskTransactions(pageable)
-                .map(this::mapToResponse);
+        
+        Page<FlaggedTransaction> results;
+        
+        if (authorizationService.hasRole("ADMIN") || authorizationService.hasRole("ANALYST")) {
+            context.put("role", "ADMIN/ANALYST");
+            structuredLogger.debug("Fetching high risk alerts (elevated role)", context);
+            results = flaggedTransactionRepository.findHighRiskTransactions(pageable);
+        } else {
+            String currentUsername = authorizationService.getCurrentUsername();
+            context.put("role", "USER");
+            context.put("user", currentUsername);
+            structuredLogger.debug("Fetching user high risk alerts", context);
+            results = flaggedTransactionRepository.findHighRiskTransactionsByUser(currentUsername, pageable);
+        }
+        
+        return results.map(this::mapToResponse);
     }
 
     /**
@@ -264,14 +328,8 @@ public class AlertService {
      * @throws IllegalArgumentException if status transition is invalid
      */
     public AlertResponse updateAlertStatus(Long alertId, AlertStatusUpdateRequest updateRequest) {
-        FlaggedTransaction transaction = flaggedTransactionRepository.findById(alertId)
-                .orElseThrow(() -> {
-                    Map<String, Object> context = new HashMap<>();
-                    context.put("event", "ALERT_NOT_FOUND");
-                    context.put("alertId", alertId);
-                    structuredLogger.warn("Alert not found", context);
-                    return new AlertNotFoundException("Alert not found with ID: " + alertId);
-                });
+        // Verify modification authorization
+        FlaggedTransaction transaction = authorizationService.verifyAlertModification(alertId);
 
         structuredLogger.setTransactionId(transaction.getTransactionId().toString());
 
@@ -476,14 +534,8 @@ public class AlertService {
      * @return the updated alert response
      */
     public AlertResponse investigateAlert(Long alertId, AlertInvestigateRequest investigateRequest) {
-        FlaggedTransaction transaction = flaggedTransactionRepository.findById(alertId)
-                .orElseThrow(() -> {
-                    Map<String, Object> context = new HashMap<>();
-                    context.put("event", "ALERT_NOT_FOUND");
-                    context.put("alertId", alertId);
-                    structuredLogger.warn("Alert not found for investigation", context);
-                    return new AlertNotFoundException("Alert not found with ID: " + alertId);
-                });
+        // Verify modification authorization (investigation is a modification)
+        FlaggedTransaction transaction = authorizationService.verifyAlertModification(alertId);
 
         structuredLogger.setTransactionId(transaction.getTransactionId().toString());
 

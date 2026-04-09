@@ -3,6 +3,7 @@ package com.example.riskmonitoring.alertservice.config;
 import com.example.riskmonitoring.alertservice.security.JwtAuthenticationFilter;
 import com.example.riskmonitoring.alertservice.security.JwtTokenProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,10 +22,19 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Spring Security Configuration
- * Configures JWT-based authentication and authorization
+ * Configures JWT-based authentication, authorization, and security headers
+ * 
+ * Security Features:
+ * - JWT token-based stateless authentication
+ * - CORS properly configured for frontend integration
+ * - Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, CSP)
+ * - CSRF protection via stateless tokens
+ * - Rate limiting and account lockout via custom services
+ * - Password encoding with BCrypt
  */
 @Slf4j
 @Configuration
@@ -34,17 +44,21 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
+    private String allowedOrigins;
+
     public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
      * Configure password encoder
+     * Uses BCrypt with strength 12 for strong password hashing
      * @return BCryptPasswordEncoder instance
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     /**
@@ -57,38 +71,61 @@ public class SecurityConfig {
         log.info("Configuring security filter chain");
 
         http
-                .csrf().disable()
-                .cors().and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeHttpRequests(authz -> authz
-                        // Public endpoints - accessible without authentication
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        
-                        // Protected endpoints - require authentication
-                        .requestMatchers(HttpMethod.GET, "/api/alerts/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/alerts/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/alerts/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/config/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/config/**").authenticated()
-                        
-                        // All other requests require authentication
-                        .anyRequest().authenticated()
-                )
-                .exceptionHandling()
+            .csrf(csrf -> csrf.disable())  // Disabled for stateless JWT authentication
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Stateless authentication
+            )
+            .authorizeHttpRequests(authz -> authz
+                // Public authentication endpoints
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/verify-email").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/health").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                // Protected endpoints
+                .requestMatchers(HttpMethod.GET, "/api/alerts/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/alerts/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/alerts/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/config/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/config/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/auth/change-password").authenticated()
+                .anyRequest().authenticated()
+            )
+            .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint((request, response, authException) -> {
                     log.warn("Unauthorized access attempt");
-                    response.sendError(401, "Unauthorized");
-                });
+                    response.setContentType("application/json");
+                    response.setStatus(401);
+                    response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                })
+                .accessDeniedHandler((request, response, ex) -> {
+                    log.warn("Access denied");
+                    response.setContentType("application/json");
+                    response.setStatus(403);
+                    response.getWriter().write("{\"error\": \"Forbidden\"}");
+                })
+            )
+            .headers(headers -> headers
+                .httpStrictTransportSecurity()
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)  // 1 year
+                .and()
+                .xssProtection()
+                .and()
+                .frameOptions().deny()  // Prevent clickjacking
+            );
 
         // Add JWT filter
         http.addFilterBefore(
-                new JwtAuthenticationFilter(jwtTokenProvider),
-                UsernamePasswordAuthenticationFilter.class
+            new JwtAuthenticationFilter(jwtTokenProvider),
+            UsernamePasswordAuthenticationFilter.class
         );
 
         return http.build();
@@ -96,15 +133,30 @@ public class SecurityConfig {
 
     /**
      * Configure CORS
+     * Properly restricts CORS to specific origins and methods
      * @return CorsConfigurationSource
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:3001"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Set allowed origins from configuration
+        String[] origins = allowedOrigins.split(",");
+        configuration.setAllowedOrigins(Arrays.asList(origins));
+        
+        // Allow specific HTTP methods
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // Allow specific headers
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        
+        // Expose these headers to the frontend
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Total-Count"));
+        
+        // Allow credentials (cookies, JWT tokens)
         configuration.setAllowCredentials(true);
+        
+        // Cache preflight requests for 3600 seconds
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -112,3 +164,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

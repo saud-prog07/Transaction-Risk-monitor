@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as authService from './authService';
 
 // API base URL - configure based on your environment
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8082';
@@ -11,14 +12,106 @@ const apiClient = axios.create({
   },
 });
 
-// Add response interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
+/**
+ * Track if token refresh is in progress to prevent multiple refresh attempts
+ */
+let isRefreshing = false;
+let failedQueue = [];
+
+/**
+ * Process queued requests after token refresh
+ */
+const processQueue = (error) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueue = [];
+  isRefreshing = false;
+};
+
+/**
+ * Request interceptor - attach authorization token to all requests
+ */
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = authService.getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
+
+/**
+ * Response interceptor - handle token expiration and refresh
+ */
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized - token expired
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Wait for refresh to complete
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          return apiClient(originalRequest);
+        }).catch((err) => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      return new Promise((resolve, reject) => {
+        authService.refreshAccessToken()
+          .then(() => {
+            // Retry original request with new token
+            apiClient(originalRequest)
+              .then(response => resolve(response))
+              .catch(err => reject(err));
+          })
+          .catch((err) => {
+            // Refresh failed - redirect to login
+            processQueue(err);
+            authService.logout();
+            window.location.href = '/login';
+            reject(err);
+          });
+        
+        processQueue(null);
+      });
+    }
+
+    // Log all other errors
+    if (error.response?.status !== 404) {
+      console.error('API Error:', error.response?.data || error.message);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Initialize authentication interceptors
+ * Call this in App.js on component mount
+ */
+export const initializeApiClient = () => {
+  const token = authService.getAuthToken();
+  if (token) {
+    authService.setAuthorizationHeader(token);
+  }
+};
 
 /**
  * Fetch all alerts (flagged transactions)

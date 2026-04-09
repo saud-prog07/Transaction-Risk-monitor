@@ -84,6 +84,86 @@ COMMENT ON TABLE alert_history IS 'Audit trail for all changes to alerts';
 COMMENT ON TABLE transaction_cache IS 'Cache for idempotency - prevents duplicate processing';
 COMMENT ON TABLE transaction_metrics IS 'Monitoring metrics for transaction processing';
 
+-- ==================================================================================
+-- AUTHENTICATION & USER MANAGEMENT TABLES
+-- ==================================================================================
+
+-- Create Users table for authentication
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT true,
+    account_non_expired BOOLEAN NOT NULL DEFAULT true,
+    account_non_locked BOOLEAN NOT NULL DEFAULT true,
+    credentials_non_expired BOOLEAN NOT NULL DEFAULT true,
+    email_verified BOOLEAN NOT NULL DEFAULT false,
+    verification_token VARCHAR(255),
+    verification_token_expiry TIMESTAMP,
+    reset_password_token VARCHAR(255),
+    reset_password_token_expiry TIMESTAMP,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    last_failed_login TIMESTAMP,
+    account_locked_until TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT valid_email CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$')
+);
+
+-- Create indexes on users table
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users(email_verified);
+CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
+CREATE INDEX IF NOT EXISTS idx_users_reset_password_token ON users(reset_password_token);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at DESC);
+
+-- Create User Roles table for authorization
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(50) NOT NULL,
+    PRIMARY KEY (user_id, role)
+);
+
+-- Create index on user_roles
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+
+-- Create Login Audit Log table
+CREATE TABLE IF NOT EXISTS login_audit_log (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    login_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    success BOOLEAN NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500),
+    failure_reason VARCHAR(255)
+);
+
+-- Create indexes on login_audit_log
+CREATE INDEX IF NOT EXISTS idx_login_audit_username ON login_audit_log(username);
+CREATE INDEX IF NOT EXISTS idx_login_audit_login_time ON login_audit_log(login_time DESC);
+CREATE INDEX IF NOT EXISTS idx_login_audit_success ON login_audit_log(success);
+
+-- Create Password Change Audit table
+CREATE TABLE IF NOT EXISTS password_change_audit (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    change_type VARCHAR(50) NOT NULL CHECK (change_type IN ('PASSWORD_CHANGE', 'PASSWORD_RESET', 'REGISTRATION')),
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500)
+);
+
+-- Create indexes on password_change_audit
+CREATE INDEX IF NOT EXISTS idx_pwd_audit_user_id ON password_change_audit(user_id);
+CREATE INDEX IF NOT EXISTS idx_pwd_audit_changed_at ON password_change_audit(changed_at DESC);
+
+COMMENT ON TABLE users IS 'Application users with authentication credentials';
+COMMENT ON TABLE user_roles IS 'User roles for authorization (USER, ADMIN, ANALYST)';
+COMMENT ON TABLE login_audit_log IS 'Audit trail for all login attempts (success and failure)';
+COMMENT ON TABLE password_change_audit IS 'Audit trail for password changes and resets';
+
 -- Create Dead Letter Queue table for failed message handling
 CREATE TABLE IF NOT EXISTS dead_letter_messages (
     id BIGSERIAL PRIMARY KEY,
