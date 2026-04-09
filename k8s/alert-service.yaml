@@ -84,17 +84,17 @@ spec:
           httpGet:
             path: /actuator/health
             port: 8083
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 3
+          initialDelaySeconds: 90  # Startup takes 45-60 seconds
+          periodSeconds: 15
+          timeoutSeconds: 5
           failureThreshold: 3
         # Health check: Is the pod ready to receive traffic?
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
             port: 8083
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          initialDelaySeconds: 90  # Wait for full startup
+          periodSeconds: 10
           timeoutSeconds: 2
           failureThreshold: 2
 
