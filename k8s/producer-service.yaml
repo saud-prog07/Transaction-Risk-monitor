@@ -74,10 +74,12 @@ metadata:
   labels:
     app: producer-service
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 8080
     targetPort: 8080
+    nodePort: 30080
     protocol: TCP
+    name: http
   selector:
     app: producer-service
