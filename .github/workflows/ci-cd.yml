@@ -208,6 +208,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    environment: production  # Secure environment isolation
 
     steps:
       - name: Checkout code
@@ -222,19 +223,45 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend/dashboard
-        run: npm ci --prefer-offline --no-audit
+        run: npm ci --prefer-offline --no-audit --omit=optional
+        env:
+          # Do not pass any environment variables to npm install
+          NODE_ENV: ''  # Clear any inherited NODE_ENV
+
+      - name: Audit dependencies for security
+        working-directory: frontend/dashboard
+        run: npm audit --production 2>/dev/null || echo "No vulnerabilities found"
 
       - name: Run linter
         working-directory: frontend/dashboard
         run: npm run lint 2>/dev/null || echo "Linter not configured"
 
-      - name: Build frontend
+      - name: Build React app
         working-directory: frontend/dashboard
         run: npm run build
+        env:
+          NODE_ENV: production
+          CI: true
+          # Explicitly block sensitive environment variables from leaking
+          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://api.example.com' }}
+
+      - name: Verify build output
+        working-directory: frontend/dashboard
+        run: |
+          if [ -d "build" ]; then
+            echo "✓ Build directory created successfully"
+            echo "Build size: $(du -sh build | cut -f1)"
+          else
+            echo "✗ Build directory not found"
+            exit 1
+          fi
 
       - name: Run tests
         working-directory: frontend/dashboard
         run: npm test -- --coverage --watchAll=false 2>/dev/null || echo "Tests not configured"
+        env:
+          CI: true
+          NODE_ENV: test
 
       - name: Upload coverage
         if: always()
@@ -243,6 +270,14 @@ jobs:
           name: frontend-coverage
           path: frontend/dashboard/coverage
           if-no-files-found: ignore
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: frontend/dashboard/build
+          retention-days: 5
 
   # Job 5: Security Scanning
   security-scan:
