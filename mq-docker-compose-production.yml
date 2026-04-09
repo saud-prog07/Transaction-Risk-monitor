@@ -1,0 +1,84 @@
+# IBM MQ Configuration for Production (10K+ Users)
+# File: docker-compose.yml (MQ service section)
+
+version: '3.9'
+
+services:
+  ibm-mq:
+    image: icr.io/ibm-messaging/mq:latest
+    container_name: risk-monitoring-mq
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QMGR
+      MQ_APP_PASSWORD: $${MQ_PASSWORD:=passw0rd}
+      MQ_ADMIN_PASSWORD: $${MQ_ADMIN_PASSWORD:=passw0rd}
+      MQ_DEV: "false"
+      
+      # HIGH THROUGHPUT SETTINGS
+      # Queue Manager Parameters
+      QMGR_DEFADPT: "100"                    # Default adapters
+      QMGR_MAXHANDLES: "512"                 # Max handles per connection
+      QMGR_MAXPROCS: "256"                   # Max processes
+      
+      # Channel Configuration
+      MQ_CHANNEL_AUTO: "true"                # Auto-create channels
+      MQ_CHANNEL_RECV_BUFF: "32768"          # Larger receive buffers
+      MQ_CHANNEL_SEND_BUFF: "32768"          # Larger send buffers
+      MQ_CHANNEL_SOCKET_RCVSIZE: "65536"     # Socket receive size
+      MQ_CHANNEL_SOCKET_SNDSIZE: "65536"     # Socket send size
+      
+      # Queue Parameters
+      QMGR_QUEUE_DEPTH_MAX: "100000"         # Allow deep queues
+      QMGR_PERSISTENCE: "true"               # Persist messages
+      QMGR_NLISTENER: "4"                    # Multiple listeners
+      
+      # Memory Settings
+      QMGR_BUFFER_POOL: "262144"             # 256MB buffer pool
+      QMGR_SHARED_MEMORY: "1048576"          # 1GB shared memory
+      
+    ports:
+      - "1414:1414"     # MQ listener
+      - "9443:9443"     # MQ console
+    
+    volumes:
+      - mq_data:/mnt/mqm
+      - ./mq-config.mqsc:/etc/mqm/install-mqm/mq-config.mqsc
+    
+    networks:
+      - risk-monitoring-network
+    
+    healthcheck:
+      test: ["CMD", "chq", "QMGR"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    
+    # Resource Limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 1G
+          cpus: '1'
+    
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  mq_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/mq-data
+
+networks:
+  risk-monitoring-network:
+    driver: bridge

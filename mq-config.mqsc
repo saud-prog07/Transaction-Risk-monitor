@@ -1,0 +1,196 @@
+* IBM MQ Configuration Script (MQSC)
+* File: mq-config.mqsc
+* Purpose: Production queue and channel configuration for 10K+ concurrent users
+
+* ==============================================================================
+* QUEUE MANAGER CONFIGURATION
+* ==============================================================================
+
+* Increase Max Queue Depth
+ALTER QMGR MAXMSGL(104857600) MAXUMSGL(104857600)
+
+* Configure Dead Letter Queue for failed messages
+DEFINE QL(SYSTEM.DEAD.LETTER.QUEUE) MAXDEPTH(100000) REPLACE
+
+* ==============================================================================
+* TRANSACTION INTAKE QUEUES (Producer Service → Risk Engine)
+* ==============================================================================
+
+* Main transaction input queue - HIGH CAPACITY
+DEFINE QL(TRANSACTION.INTAKE) +
+  MAXDEPTH(50000) +
+  MAXMSGL(1048576) +
+  DEFTYPE(QUEUE) +
+  USAGE(NORMAL) +
+  PERSISTENCE(YES) +
+  NOSHARE +
+  REPLACE
+
+* Transaction intake priority queue (for time-sensitive transactions)
+DEFINE QL(TRANSACTION.INTAKE.PRIORITY) +
+  MAXDEPTH(10000) +
+  MAXMSGL(1048576) +
+  DEFTYPE(QUEUE) +
+  USAGE(NORMAL) +
+  PERSISTENCE(YES) +
+  PRIORITY(9) +
+  REPLACE
+
+* ==============================================================================
+* RISK ANALYSIS QUEUES (Risk Engine Processing)
+* ==============================================================================
+
+* Main risk analysis queue
+DEFINE QL(RISK.ANALYSIS.QUEUE) +
+  MAXDEPTH(50000) +
+  MAXMSGL(1048576) +
+  PERSISTENCE(YES) +
+  NOSHARE +
+  REPLACE
+
+* Risk analysis response queue (processed transactions)
+DEFINE QL(RISK.ANALYSIS.RESPONSE) +
+  MAXDEPTH(50000) +
+  MAXMSGL(1048576) +
+  PERSISTENCE(YES) +
+  NOSHARE +
+  REPLACE
+
+* High-risk transaction alerts queue
+DEFINE QL(RISK.ALERTS.HIGH) +
+  MAXDEPTH(10000) +
+  MAXMSGL(1048576) +
+  PERSISTENCE(YES) +
+  PRIORITY(9) +
+  REPLACE
+
+* ==============================================================================
+* ALERT SERVICE QUEUES
+* ==============================================================================
+
+* Alert notification queue
+DEFINE QL(ALERT.NOTIFICATIONS) +
+  MAXDEPTH(20000) +
+  MAXMSGL(1048576) +
+  PERSISTENCE(YES) +
+  NOSHARE +
+  REPLACE
+
+* Alert DLQ (for failed alert sends)
+DEFINE QL(ALERT.DLQ) +
+  MAXDEPTH(5000) +
+  MAXMSGL(1048576) +
+  PERSISTENCE(YES) +
+  REPLACE
+
+* ==============================================================================
+* CHANNEL CONFIGURATION FOR SERVICE CONNECTIONS
+* ==============================================================================
+
+* Producer Service connection
+DEFINE CHL(PRODUCER.CHANNEL) CHLTYPE(SVRCONN) +
+  RECVBUFF(65536) +
+  SENDBUFF(65536) +
+  MAXINST(100) +
+  MAXINSTC(100) +
+  CONNNAME('producer-service:8080') +
+  REPLACE
+
+* Risk Engine connection
+DEFINE CHL(RISK.CHANNEL) CHLTYPE(SVRCONN) +
+  RECVBUFF(65536) +
+  SENDBUFF(65536) +
+  MAXINST(100) +
+  MAXINSTC(100) +
+  CONNNAME('risk-engine:8081') +
+  REPLACE
+
+* Alert Service connection
+DEFINE CHL(ALERT.CHANNEL) CHLTYPE(SVRCONN) +
+  RECVBUFF(65536) +
+  SENDBUFF(65536) +
+  MAXINST(50) +
+  MAXINSTC(50) +
+  CONNNAME('alert-service:8082') +
+  REPLACE
+
+* ==============================================================================
+* PROCESS DEFINITIONS FOR AUTO-TRIGGER ROUTING
+* ==============================================================================
+
+* Process: Route high-risk transactions to priority queue
+DEFINE PROCESS(HIGH.RISK.ROUTER) +
+  DESCR('Routes high-risk transactions to priority alert queue') +
+  APPLTYPE(WINDOWS_NT) +
+  APPLID('risk-router') +
+  REPLACE
+
+* Trigger monitor for high-risk alerts
+DEFINE TRIGMON INITQ(SYSTEM.DEFAULT.INITIATION.QUEUE) REPLACE
+
+* ==============================================================================
+* NAMELIST FOR QUEUE CLUSTERING (Future HA)
+* ==============================================================================
+
+* Define cluster for multiple MQ instances
+* Uncomment when enabling MQ clustering for high availability
+* DEFINE NAMELIST(RISK.MONITORING.CLUSTER) NAMES(QMGR1, QMGR2, QMGR3) REPLACE
+
+* ==============================================================================
+* LISTENER CONFIGURATION
+* ==============================================================================
+
+* Main TCP listener on port 1414
+DEFINE LISTENER(SYSTEM.DEFAULT.LISTENER.TCP) +
+  TRPTYPE(TCP) +
+  IPADDR('*') +
+  PORT(1414) +
+  BACKLOG(128) +
+  REPLACE
+
+* ==============================================================================
+* MONITORING & TRACE SETTINGS
+* ==============================================================================
+
+* Enable queue depth monitoring
+ALTER QMGR LOGADA(NO) LOGSTG(PRIMARY)
+
+* Set security policy
+ALTER QMGR CHLAUTH(ENABLED) CHLEXIT(ENABLED)
+
+* ==============================================================================
+* PERMISSIONS & SECURITY RULES
+* ==============================================================================
+
+* Define channel authentication records for service accounts
+SET CHLAUTH(CHLTYPE(SVRCONN)) TYPE(ADDRESSMAP) +
+  ADDRESS('*') +
+  USERSRC(CHANNEL) +
+  REPLACE
+
+* Allow producer service
+SET CHLAUTH(PRODUCER.CHANNEL) TYPE(BLOCKUSER) +
+  USERLIST('nobody') +
+  REPLACE
+
+* Allow risk engine
+SET CHLAUTH(RISK.CHANNEL) TYPE(BLOCKUSER) +
+  USERLIST('nobody') +
+  REPLACE
+
+* Allow alert service
+SET CHLAUTH(ALERT.CHANNEL) TYPE(BLOCKUSER) +
+  USERLIST('nobody') +
+  REPLACE
+
+* ==============================================================================
+* QUEUE MANAGER TUNING
+* ==============================================================================
+
+* Start listener
+START LISTENER(SYSTEM.DEFAULT.LISTENER.TCP) TRPTYPE(TCP)
+
+* Display configuration for verification
+DISPLAY QMGR
+DISPLAY QUEUE(TRANSACTION.INTAKE)
+DISPLAY CHL(PRODUCER.CHANNEL)

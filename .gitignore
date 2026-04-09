@@ -1,150 +1,155 @@
 # ============================================================================
 # REAL-TIME TRANSACTION RISK MONITORING SYSTEM - GITIGNORE
-# Company: Risk Monitoring Solutions Inc.
-# Purpose: Real-time fraud detection and transaction analysis platform
+# SECURITY CRITICAL: Prevents sensitive data from being committed
 # ============================================================================
+
+# ============================================================================
+# ⚠️ SECRETS & CREDENTIALS (NEVER COMMIT THESE)
+# ============================================================================
+
+# Environment Variables with secrets
+.env
+.env.local
+.env.production
+.env.staging
+.env.development.local
+.env.test.local
+.env.*.local
+.env.backup
+
+# API Keys & Tokens
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.keystore
+*.jks
+~/.aws/
+~/.gcp/
+~/.ssh/
+secrets/
+vault/
+.vault-token
+
+# Private Configuration Files (contain passwords)
+**/application-production.yml
+**/application-production.yaml
+backend/**/src/main/resources/application-production.*
+backend/**/src/main/resources/application-prod.*
+postgres-password.txt
+mq-password.txt
+redis-password.txt
+**/config-prod.yml
+**/config-prod.yaml
+
+# Credentials
+credentials/
+private-keys/
+ssl-certs/
+docker-secrets/
+.aws/credentials
+.aws/config
+.docker/config.json
+.git-credentials
 
 # ============================================================================
 # BUILD & COMPILATION ARTIFACTS
 # ============================================================================
 target/
 build/
-out/
 dist/
+out/
 *.class
 *.jar
 *.war
 *.ear
 *.zip
 *.tar.gz
-*.rar
-
-# ============================================================================
-# MAVEN
-# ============================================================================
-.m2/
-pom.xml.tag
-pom.xml.releaseBackup
-release.properties
-pom.xml.versionsBackup
-.mvn/wrapper/maven-wrapper.jar
-.mvn/wrapper/maven-wrapper.properties
-
-# ============================================================================
-# GRADLE
-# ============================================================================
 .gradle/
-gradle-app.setting
-!gradle-wrapper.jar
-!gradle-wrapper.properties
-.gradletasknamecache
+.m2/
+node_modules/
 
 # ============================================================================
-# IDE & EDITOR FILES
+# IDE & EDITOR CONFIGURATIONS
 # ============================================================================
-
-# IntelliJ IDEA
 .idea/
 *.iml
 *.iws
 *.ipr
-.idea_modules/
-out/
-*.sublime-project
-*.sublime-workspace
-
-# VS Code
-.vscode/
-*.code-workspace
-.vscode-test
-.history/
-
-# Eclipse
+.vscode/settings.json
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.eclipse/
 .classpath
 .project
 .settings/
-.factorypath
-.c9/
-*.launch
-
-# NetBeans
-nbproject/private/
-build/
-nbbuild/
-dist/
-nbdist/
-.nb-gradle/
-
-# Sublime Text
 *.sublime-project
 *.sublime-workspace
-
-# Visual Studio
-.vs/
-.vscache
-*.sln.docstates
-*.vcxproj.filters
-*.vcxproj.user
-
-# Vim & Emacs
-*~
-.swp
-.swo
-*#
-.emacs.d/
-TAGS
-
-# ============================================================================
-# OPERATING SYSTEM FILES
-# ============================================================================
-
-# macOS
 .DS_Store
-.AppleDouble
-.LSOverride
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-*.lnk
-*.exe
-
-# Linux
-.Xauthority
-.serverauth.*
 
 # ============================================================================
-# DEPENDENCIES & LIBRARIES
+# NPM & Node Dependencies
 # ============================================================================
 node_modules/
-npm-debug.log
-npm-debug.log.*
-yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 package-lock.json
 yarn.lock
-.bundlelog
+pnpm-lock.yaml
+frontend/dashboard/build/
+frontend/dashboard/dist/
 
 # ============================================================================
-# ENVIRONMENT & CONFIGURATION FILES (SECRETS)
+# LOGS & TEMPORARY FILES
 # ============================================================================
+*.log
+logs/
+log/
+*.tmp
+tmp/
+temp/
+*.bak
+*.backup
+*~
 
-# Environment variables - NEVER commit these
-.env
-.env.local
-.env.*.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.backup
+# ============================================================================
+# DATABASE BACKUPS & DUMPS
+# ============================================================================
+*.sql.backup
+*.sql.dump
+pg_dump.sql
+*.db
+*.sqlite
+dump.sql
 
-# BUT DO TRACK .env.example as template reference
+# ============================================================================
+# COVERAGE & TEST DATA
+# ============================================================================
+coverage/
+.nyc_output/
+load-test-results.json
+*.lcov
+
+# ============================================================================
+# ALLOWED: These files SHOULD be in the repo (recruiter-friendly)
+# ============================================================================
+!.gitignore
+!README.md
+!CONTRIBUTING.md
+!LICENSE
+!.github/
+!.github/**
+!docs/
+!architecture/
+!**/*.md
+!backend/src/
+!frontend/dashboard/src/
+!Dockerfile
+!docker-compose.yml
+!load-test-10k-users.js
 !.env.example
 !*/.env.example
 

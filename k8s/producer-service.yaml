@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: producer-service
-        image: dddddddff/producer-service:latest
+        image: producer-service:local
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:

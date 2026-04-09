@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: risk-engine
-        image: dddddddff/risk-engine:latest
+        image: risk-engine:local
+        imagePullPolicy: Never
         ports:
         - containerPort: 8082
         env:
