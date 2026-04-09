@@ -315,6 +315,85 @@ Response [200 OK]:
 
 ---
 
+## Comprehensive Security Features (40+ Implemented)
+
+### Authentication & Authorization
+- **JWT Token Authentication** - Stateless, cryptographically signed tokens (HS256)
+- **Refresh Token Mechanism** - Extended session management with separate expiration
+- **Email Verification** - Confirms user identity before account activation
+- **Password Reset** - Secure token-based password recovery flow
+- **User Registration** - Validated registration with strength requirements
+- **Role-Based Access Control (RBAC)** - Spring Security with authority hierarchy
+
+### Rate Limiting & Abuse Prevention
+- **Login Rate Limiting** - 5 attempts/min per username (configurable)
+- **Registration Rate Limiting** - 2 registrations/min per IP address
+- **AI Generation Rate Limiting** - Prevents automated/bot abuse
+- **Global Rate Limiting** - Request throttling by identifier
+- **Bot Detection** - User-agent validation + suspicious pattern analysis
+- **Honeypot Validation** - Detects automated form submission attempts
+- **IP-Based Blocking** - Temporary IP suspension for policy violations
+- **Duplicate Request Detection** - Prevents duplicate transactions via request deduplication
+
+### Encryption & Data Protection
+- **BCrypt Password Hashing** - Industry-standard with salt and cost factor 12
+- **HTTPS in Production** - TLS 1.2+ enforcement
+- **At-Rest Encryption** - Encrypted sensitive database columns
+- **In-Transit Encryption** - All API communications encrypted
+- **JWT Secret Management** - Configurable secure secrets (32+ bytes recommended)
+- **Secrets Rotation Ready** - Supports external secret management (K8s, AWS, Azure)
+
+### Security Headers & CORS
+- **CSRF Protection** - Stateless token validation via Spring Security
+- **Security Headers** - X-Frame-Options, X-Content-Type-Options, X-XSS-Protection
+- **Content Security Policy** - Restricts inline scripts and external resources
+- **CORS Configuration** - Explicit origin whitelisting (no wildcards in production)
+- **Same-Site Cookies** - HttpOnly, Secure, SameSite attributes on all cookies
+- **X-API-Key Validation** - Optional API key authentication for service-to-service
+
+### Audit Trail & Logging
+- **Immutable Audit Table** - Append-only record of all alert lifecycle events
+- **Authentication Audit** - Logs all login attempts (success/failure)
+- **Authorization Audit** - Records access attempts to protected resources
+- **Change Tracking** - All alert status and risk score updates logged with timestamp
+- **Structured JSON Logging** - Machine-readable logs with MDC (trace IDs, user IDs)
+- **Sensitive Data Masking** - Removes passwords, tokens, PII from logs
+
+### Input Validation & Injection Prevention
+- **SQL Injection Prevention** - Parameterized queries via Spring Data JPA
+- **XSS Prevention** - React automatic escaping + input sanitization
+- **Command Injection Prevention** - No string concatenation for system commands
+- **XML/XXE Prevention** - Disabled external entity processing
+- **Deserialization Safety** - Type-safe JSON unmarshalling with Jackson
+- **Regex DoS Prevention** - Bounded regular expressions for validation
+- **Request Size Limits** - Enforced max payload sizes (100KB default)
+
+### Infrastructure Security
+- **Docker Non-Root User** - All containers run as unprivileged user
+- **Multi-Stage Docker Builds** - Minimal attack surface (~300MB images)
+- **Least Privilege** - Database users with role-specific permissions
+- **Network Isolation** - Internal Docker network for service-to-service communication
+- **Secret Management** - Environment variables + K8s secrets support
+- **Health Checks** - Automated container restart on failure
+
+### API Security
+- **API Versioning** - Future-proof endpoint design (v1, v2, etc.)
+- **Request/Response Validation** - Spring validation annotations (@Valid, @NotNull)
+- **Error Handling** - Generic error messages (no sensitive data leaked)
+- **Rate Limiting Headers** - X-Rate-Limit-* headers for client throttling
+- **Request Signing** - HMAC-based request authentication support
+- **API Key Rotation** - Automatic key expiration and renewal support
+
+### Compliance & Standards
+- **OWASP Top 10** - Addresses all critical vulnerabilities
+- **PCI DSS Ready** - Secure payment handling patterns
+- **GDPR Compliance** - User data management and deletion support
+- **Audit Trail** - Complete forensics for compliance audits
+- **Logging Retention** - Configurable log rotation and archival
+- **Documentation** - Security architecture and threat modeling included
+
+---
+
 ## Key Features
 
 - Real-Time Processing: 2-4 second detection latency with sub-second database commits
@@ -325,7 +404,7 @@ Response [200 OK]:
 - Idempotency: Transaction cache + UUID deduplication prevents duplicate alerts
 - Audit Trail: Complete forensics - all alerts, status changes, risk scores logged
 - Structured Logging: JSON-formatted logs with trace IDs for debugging
-- Security: Non-root Docker users, health checks, Spring Security integration
+- Security: 40+ security features, non-root containers, Spring Security integration
 - Observable: Spring Actuator endpoints, Prometheus-ready metrics, detailed health checks
 - Dashboard: Professional React UI with real-time updates and alert management
 - Testing Tools: Transaction simulator with fraud patterns for validation
