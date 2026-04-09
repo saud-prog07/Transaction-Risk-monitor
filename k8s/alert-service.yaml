@@ -79,6 +79,24 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: JWT_SECRET
+        # Health check: Is the pod alive?
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Health check: Is the pod ready to receive traffic?
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8083
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 2
 
 ---
 apiVersion: v1
