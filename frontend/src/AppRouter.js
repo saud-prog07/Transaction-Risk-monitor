@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import OperationsDashboard from './components/OperationsDashboard';
 import AlertDetailPage from './components/AlertDetailPage';
 import DLQDashboard from './pages/DLQDashboard';
+import SystemFlowVisualization from './pages/SystemFlowVisualization';
 import NotFound from './pages/NotFound';
 
 /**
@@ -29,6 +30,9 @@ function AppRouter() {
         
         {/* DLQ Dashboard - Dead Letter Queue management (ADMIN only) */}
         <Route path="/admin/dlq" element={<DLQDashboard />} />
+        
+        {/* System Flow Visualization - Real-time pipeline monitoring */}
+        <Route path="/flow" element={<SystemFlowVisualization />} />
         
         {/* Additional routes as needed */}
         {/* <Route path="/transactions" element={<TransactionsList />} />
