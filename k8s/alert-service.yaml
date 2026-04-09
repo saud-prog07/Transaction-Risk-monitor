@@ -26,6 +26,8 @@ spec:
         - containerPort: 8083
         env:
         # From ConfigMap (non-sensitive config)
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/risk_monitoring"
         - name: SPRING_RABBITMQ_HOST
           valueFrom:
             configMapKeyRef:
@@ -36,29 +38,22 @@ spec:
             configMapKeyRef:
               name: app-config
               key: MQ_PORT
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
-        - name: DB_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: DB_HOST
-        - name: DB_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: DB_PORT
-        - name: DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: DB_NAME
         - name: LOG_LEVEL
           valueFrom:
             configMapKeyRef:
               name: app-config
               key: LOG_LEVEL
         # From Secret (sensitive credentials)
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_USERNAME
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_PASSWORD
         - name: SPRING_RABBITMQ_USERNAME
           valueFrom:
             secretKeyRef:
