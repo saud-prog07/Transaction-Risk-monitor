@@ -2,6 +2,8 @@ package com.example.riskmonitoring.alertservice.config;
 
 import com.example.riskmonitoring.alertservice.security.JwtAuthenticationFilter;
 import com.example.riskmonitoring.alertservice.security.JwtTokenProvider;
+import com.example.riskmonitoring.alertservice.security.GlobalRateLimitingFilter;
+import com.example.riskmonitoring.alertservice.security.RequestValidationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -43,12 +45,18 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final GlobalRateLimitingFilter globalRateLimitingFilter;
+    private final RequestValidationFilter requestValidationFilter;
 
     @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
     private String allowedOrigins;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider,
+                         GlobalRateLimitingFilter globalRateLimitingFilter,
+                         RequestValidationFilter requestValidationFilter) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.globalRateLimitingFilter = globalRateLimitingFilter;
+        this.requestValidationFilter = requestValidationFilter;
     }
 
     /**
@@ -122,7 +130,20 @@ public class SecurityConfig {
                 .frameOptions().deny()  // Prevent clickjacking
             );
 
-        // Add JWT filter
+        // Add security filters in order:
+        // 1. Global Rate Limiting Filter - prevent DDoS and brute force attacks
+        http.addFilterBefore(
+            globalRateLimitingFilter,
+            UsernamePasswordAuthenticationFilter.class
+        );
+
+        // 2. Request Validation Filter - OWASP input validation
+        http.addFilterBefore(
+            requestValidationFilter,
+            UsernamePasswordAuthenticationFilter.class
+        );
+
+        // 3. JWT Authentication Filter
         http.addFilterBefore(
             new JwtAuthenticationFilter(jwtTokenProvider),
             UsernamePasswordAuthenticationFilter.class
