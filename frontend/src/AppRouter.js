@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // Import components
 import OperationsDashboard from './components/OperationsDashboard';
 import AlertDetailPage from './components/AlertDetailPage';
+import DLQDashboard from './pages/DLQDashboard';
 import NotFound from './pages/NotFound';
 
 /**
@@ -25,6 +26,9 @@ function AppRouter() {
         
         {/* Alert Investigation Workflow */}
         <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
+        
+        {/* DLQ Dashboard - Dead Letter Queue management (ADMIN only) */}
+        <Route path="/admin/dlq" element={<DLQDashboard />} />
         
         {/* Additional routes as needed */}
         {/* <Route path="/transactions" element={<TransactionsList />} />
