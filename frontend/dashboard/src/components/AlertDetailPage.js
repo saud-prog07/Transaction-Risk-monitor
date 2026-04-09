@@ -368,7 +368,7 @@ const AlertDetailPage = ({ onClose }) => {
 
        {/* Transaction Trace View */}
        <div className="trace-section">
-         <TransactionTraceView transactionId={alert?.transactionId} />
+         <TransactionTraceView transactionId={alert?.transaction_id} />
        </div>
     </div>
   );
