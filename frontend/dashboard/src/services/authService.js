@@ -323,6 +323,8 @@ export const getRemainingTokenTime = () => {
   const remaining = tokenExpiresAt - Date.now();
   return Math.max(0, remaining);
 };
+
+/**
  * Initialize authentication on app startup
  * Sets authorization header if token exists
  */

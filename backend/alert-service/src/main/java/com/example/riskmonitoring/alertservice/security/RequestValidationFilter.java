@@ -243,7 +243,8 @@ public class RequestValidationFilter extends OncePerRequestFilter {
      * Get maximum nesting depth of JSON structure
      */
     private int getJsonDepth(JsonNode node) {
-        if (node.isLeaf()) {
+        // Check if this is a leaf node (not object or array)
+        if (!node.isObject() && !node.isArray()) {
             return 1;
         }
         

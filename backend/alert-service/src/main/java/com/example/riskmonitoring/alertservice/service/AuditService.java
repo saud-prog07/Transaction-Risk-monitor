@@ -224,6 +224,32 @@ public class AuditService {
     }
     
     /**
+     * Record a generic system audit event (for DLQ operations, etc).
+     * 
+     * @param eventType the type of event
+     * @param fieldName the field name being operated on
+     * @param fieldValue the value of the field
+     * @param details additional details about the event
+     * @param success whether the operation was successful
+     */
+    @Transactional
+    public void auditEvent(String eventType, String fieldName, String fieldValue, String details, boolean success) {
+        try {
+            AuditLog auditLog = AuditLog.builder()
+                    .action(AuditAction.valueOf(eventType.replace("DLQ_", "DLQ")))
+                    .userId("SYSTEM")
+                    .details(String.format("%s: %s=%s, %s (success=%s)", eventType, fieldName, fieldValue, details, success))
+                    .timestamp(Instant.now())
+                    .build();
+            
+            auditLogRepository.save(auditLog);
+            log.debug("Audit event recorded: eventType={}, field={}={}", eventType, fieldName, fieldValue);
+        } catch (Exception e) {
+            log.warn("Failed to record audit event: {}", eventType, e);
+        }
+    }
+    
+    /**
      * Convert AuditLog entity to DTO.
      */
     private AuditLogDTO toDTO(AuditLog auditLog) {

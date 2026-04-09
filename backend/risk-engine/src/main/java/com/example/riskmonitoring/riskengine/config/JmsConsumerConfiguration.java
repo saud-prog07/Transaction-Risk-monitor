@@ -13,7 +13,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 /**
  * Configuration for JMS consumer and HTTP client setup.
@@ -40,21 +40,15 @@ public class JmsConsumerConfiguration {
             @Value("${spring.jms.ibm-mq.queue-manager}") String queueManager,
             @Value("${spring.jms.ibm-mq.channel}") String channel,
             @Value("${spring.jms.ibm-mq.connName}") String connName,
-            @Value("${spring.jms.ibm-mq.user}") String user,
-            @Value("${spring.jms.ibm-mq.password}") String password) {
+            @Value("${spring.jms.ibm-mq.user:app}") String user,
+            @Value("${spring.jms.ibm-mq.password:passw0rd}") String password) {
 
         try {
             MQQueueConnectionFactory factory = new MQQueueConnectionFactory();
             factory.setQueueManager(queueManager);
             factory.setChannel(channel);
             factory.setConnectionNameList(connName);
-            // Note: setUserID/setPassword may not exist in all IBM MQ versions
-            // Use setUser() if available, or configure via SSL/authentication properties
-            try {
-                factory.setUser(user);
-            } catch (NoSuchMethodError e) {
-                log.warn("setUser() method not available in IBM MQ factory, skipping user configuration");
-            }
+            // IBM MQ uses environment/properties for user authentication
             factory.setTransportType(1); // TCP/IP connection
 
             log.info("IBM MQ Connection Factory configured: QM={}, Channel={}, ConnName={}",
@@ -75,7 +69,10 @@ public class JmsConsumerConfiguration {
      */
     @Bean
     public ConnectionFactory connectionFactory(MQQueueConnectionFactory mqQueueConnectionFactory) {
-        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(mqQueueConnectionFactory);
+        // Cast to jakarta.jms.ConnectionFactory for Spring Boot 3.x compatibility
+        @SuppressWarnings("unchecked")
+        jakarta.jms.ConnectionFactory jcf = (jakarta.jms.ConnectionFactory) (Object) mqQueueConnectionFactory;
+        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(jcf);
         cachingConnectionFactory.setSessionCacheSize(10);
         cachingConnectionFactory.setCacheConsumers(true);
         cachingConnectionFactory.setCacheProducers(false);

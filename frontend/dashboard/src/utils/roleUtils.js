@@ -3,7 +3,7 @@
  * Handles checking user roles from JWT token
  */
 
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 /**
  * Decode JWT token and extract role

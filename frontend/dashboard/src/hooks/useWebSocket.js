@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import SockJS from 'sockjs-client';
-import Stomp from 'stompjs';
+import { Client } from '@stomp/stompjs';
 
 /**
  * useWebSocket - Custom React Hook for WebSocket Communication
@@ -117,19 +117,19 @@ const useWebSocket = (options = {}) => {
       const wsUrl = getWebSocketUrl();
       console.log('Connecting to WebSocket:', wsUrl);
 
-      // Create SockJS socket with fallback transports
-      sockJsRef.current = new SockJS(wsUrl, null, {
-        transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
-      });
-
-      // Create STOMP client
-      stompClientRef.current = Stomp.over(sockJsRef.current);
-      stompClientRef.current.debug = process.env.NODE_ENV === 'development';
-
-      // Connect with error handling
-      stompClientRef.current.connect(
-        {}, // headers
-        () => {
+      // Create STOMP client with SockJS
+      stompClientRef.current = new Client({
+        brokerURL: wsUrl,
+        connectHeaders: {},
+        debug: (msg) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[STOMP]', msg);
+          }
+        },
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        onConnect: () => {
           // Success callback
           console.log('WebSocket connected');
           setIsConnected(true);
@@ -147,19 +147,23 @@ const useWebSocket = (options = {}) => {
 
           if (onConnect) onConnect();
         },
-        (error) => {
+        onStompError: (frame) => {
           // Error callback
-          console.error('WebSocket connection error:', error);
-          setIsConnected(false);
+          console.error('STOMP error:', frame);
           setIsConnecting(false);
-          setError(error);
+          setIsConnected(false);
+          const err = new Error(`STOMP error: ${frame.body}`);
+          setError(err);
 
-          if (onError) onError(error);
+          if (onError) onError(err);
 
-          // Attempt reconnection
+          // Attempt reconnect
           attemptReconnect();
-        }
-      );
+        },
+      });
+
+      // Connect
+      stompClientRef.current.activate();
     } catch (err) {
       console.error('Error establishing WebSocket connection:', err);
       setIsConnecting(false);

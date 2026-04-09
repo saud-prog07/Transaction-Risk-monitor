@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@chakra-ui/react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
@@ -78,84 +72,84 @@ export default function MetricsDashboard() {
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Processed */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400 font-medium">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div>
+            <h3 className="text-gray-400 font-medium">
               Total Transactions Processed
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div>
             <div className="text-3xl font-bold text-gray-100">
               {metrics.totalProcessed.toLocaleString()}
             </div>
             <p className="text-gray-400 mt-2 text-sm">
               Total transactions processed since startup
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Flagged Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400 font-medium">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div>
+            <h3 className="text-gray-400 font-medium">
               Flagged Transactions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div>
             <div className="text-3xl font-bold text-yellow-400">
               {metrics.flaggedCount.toLocaleString()}
             </div>
             <p className="text-gray-400 mt-2 text-sm">
               Transactions flagged for review
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Failed Messages (DLQ) */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400 font-medium">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div>
+            <h3 className="text-gray-400 font-medium">
               Failed Messages (DLQ)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div>
             <div className="text-3xl font-bold text-red-400">
               {metrics.failedCount.toLocaleString()}
             </div>
             <p className="text-gray-400 mt-2 text-sm">
               Messages sent to Dead Letter Queue
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Avg Processing Time */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400 font-medium">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div>
+            <h3 className="text-gray-400 font-medium">
               Avg Processing Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div>
             <div className="text-3xl font-bold text-blue-400">
               {metrics.avgProcessingTime.toFixed(2)} ms
             </div>
             <p className="text-gray-400 mt-2 text-sm">
               Average time to process each transaction
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Throughput Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400 font-medium">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div>
+            <h3 className="text-gray-400 font-medium">
               Throughput (Transactions/Second)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
                 data={throughputHistory}
@@ -175,17 +169,17 @@ export default function MetricsDashboard() {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Success vs Failure Rate Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400 font-medium">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div>
+            <h3 className="text-gray-400 font-medium">
               Success vs Failure Rate (%)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart
                 data={successRateHistory}
@@ -218,8 +212,8 @@ export default function MetricsDashboard() {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

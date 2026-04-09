@@ -66,10 +66,13 @@ public class RiskAnalyzerConfigController {
     public ResponseEntity<?> getConfigById(@PathVariable Long id) {
         log.debug("GET /api/risk/config/{} - Retrieve configuration", id);
 
-        return configService.getConfigById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("Configuration not found", id)));
+        var config = configService.getConfigById(id);
+        if (config.isPresent()) {
+            return ResponseEntity.ok(config.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorResponse("Configuration not found", id));
+        }
     }
 
     /**
@@ -81,10 +84,13 @@ public class RiskAnalyzerConfigController {
     public ResponseEntity<?> getConfigByName(@PathVariable String analyzerName) {
         log.debug("GET /api/risk/config/analyzer/{} - Retrieve configuration", analyzerName);
 
-        return configService.getConfigByName(analyzerName)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorResponse("Analyzer not found", analyzerName)));
+        var config = configService.getConfigByName(analyzerName);
+        if (config.isPresent()) {
+            return ResponseEntity.ok(config.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorResponse("Analyzer not found", analyzerName));
+        }
     }
 
     /**

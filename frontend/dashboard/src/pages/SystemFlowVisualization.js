@@ -14,10 +14,9 @@ import {
   Grid,
   GridItem,
   Spinner,
-  useToast,
 } from '@chakra-ui/react';
 import { ArrowRightIcon } from '@chakra-ui/icons';
-import apiClient from '../api/apiClient';
+import apiClient from '../services/apiService';
 
 /**
  * System Flow Visualization Component
@@ -42,7 +41,11 @@ const SystemFlowVisualization = () => {
   const [flowData, setFlowData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const toast = useToast();
+  
+  // Mock toast function
+  const toast = (config) => {
+    console.log('[Toast]', config.title || 'Notification', ':', config.description || '');
+  };
 
   // Define pipeline stages
   const stages = [

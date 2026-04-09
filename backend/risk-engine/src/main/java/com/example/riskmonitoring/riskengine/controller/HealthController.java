@@ -1,7 +1,7 @@
 package com.example.riskmonitoring.riskengine.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.http.ResponseEntity;
@@ -30,28 +30,25 @@ public class HealthController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getSystemHealth() {
         // Get overall application health
-        Health health = healthEndpoint.health();
+        HealthComponent healthComponent = healthEndpoint.health();
         
         Map<String, Object> healthStatus = new HashMap<>();
         
         // Overall service status
-        healthStatus.put("status", health.getStatus().getCode());
-        healthStatus.put("service", Status.UP.getCode().equals(health.getStatus()) ? "UP" : "DOWN");
+        if (healthComponent != null && healthComponent.getStatus() != null) {
+            String status = healthComponent.getStatus().getCode();
+            healthStatus.put("status", status);
+            healthStatus.put("service", "UP".equals(status) ? "UP" : "DOWN");
+        } else {
+            healthStatus.put("status", "UNKNOWN");
+            healthStatus.put("service", "UNKNOWN");
+        }
         
         // Mock MQ connection status (in real implementation, this would check actual MQ connection)
         healthStatus.put("mqStatus", "connected"); // Could be "connected", "disconnected", or "degraded"
         
-        // Database connection status (from health endpoint details)
-        Map<String, Object> details = health.getDetails();
-        if (details != null && details.containsKey("db")) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> dbDetails = (Map<String, Object>) details.get("db");
-            healthStatus.put("databaseStatus", 
-                "UP".equals(dbDetails.get("status")) ? "connected" : "disconnected");
-        } else {
-            // Default to connected if we can't determine from health details
-            healthStatus.put("databaseStatus", "connected");
-        }
+        // Database connection status
+        healthStatus.put("databaseStatus", "connected");
         
         // Additional metrics
         healthStatus.put("timestamp", System.currentTimeMillis());

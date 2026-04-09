@@ -29,8 +29,8 @@ public class MetricsController {
         metrics.put("totalProcessed", metricsService.getTotalProcessed());
         metrics.put("flaggedCount", metricsService.getFlaggedCount());
         metrics.put("failedCount", metricsService.getFailedCount());
-        metrics.put("avgProcessingTime", metricsService.getAvgProcessingTimeMs());
-        metrics.put("throughput", metricsService.getThroughput());
+        metrics.put("avgProcessingTime", metricsService.getAvgProcessingTimeMillis());
+        metrics.put("throughput", metricsService.getThroughputPerSecond());
         
         return ResponseEntity.ok(metrics);
     }

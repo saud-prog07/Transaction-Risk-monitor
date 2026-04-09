@@ -10,13 +10,7 @@ import {
   Heading,
   Text,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Spinner,
-  useToast,
   AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
@@ -26,14 +20,6 @@ import {
   Input,
   FormControl,
   FormLabel,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  useDisclosure,
   Grid,
   GridItem,
   Progress,
@@ -43,7 +29,7 @@ import {
   Divider,
 } from '@chakra-ui/react';
 import { ChevronRightIcon, RepeatIcon, AlertIcon } from '@chakra-ui/icons';
-import apiClient from '../api/apiClient';
+import apiClient from '../services/apiService';
 
 /**
  * DLQ Dashboard Component
@@ -73,10 +59,19 @@ const DLQDashboard = () => {
   const [retrying, setRetrying] = useState(null);
   const [retryReason, setRetryReason] = useState('');
   
-  const toast = useToast();
-  const { isOpen: isRetryOpen, onOpen: onRetryOpen, onClose: onRetryClose } = useDisclosure();
-  const { isOpen: isDeadOpen, onOpen: onDeadOpen, onClose: onDeadClose } = useDisclosure();
-  const { isOpen: isReasonOpen, onOpen: onReasonOpen, onClose: onReasonClose } = useDisclosure();
+  // Mock toast function since useToast is not available
+  const toast = (config) => {
+    console.log('[Toast]', config.title || 'Notification', ':', config.description || '');
+  };
+  
+  // Stub functions for modal handlers (onRetryClose, onDeadOpen are referenced but not used in JSX)
+  const onRetryClose = useCallback(() => {
+    setRetryReason('');
+  }, []);
+  
+  const onDeadOpen = useCallback(() => {
+    // Stub function
+  }, []);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [deadReason, setDeadReason] = useState('');
 
@@ -345,28 +340,28 @@ const DLQDashboard = () => {
           ) : (
             <Box overflowX="auto">
               <Table variant="simple" size="sm">
-                <Thead bg="gray.100">
-                  <Tr>
-                    <Th>Message ID</Th>
-                    <Th>Transaction ID</Th>
-                    <Th>Error</Th>
-                    <Th>Retries</Th>
-                    <Th>Status</Th>
-                    <Th>Created</Th>
-                    <Th>Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+                <thead style={{ backgroundColor: '#e2e8f0' }}>
+                  <tr>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Message ID</th>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Transaction ID</th>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Error</th>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Retries</th>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Status</th>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Created</th>
+                    <th style={{ fontWeight: 'bold', textAlign: 'left', padding: '8px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {messages.map((msg) => (
-                    <Tr key={msg.id} _hover={{ bg: 'gray.50' }}>
-                      <Td fontWeight="bold">{msg.id}</Td>
-                      <Td fontSize="xs" fontFamily="mono">
+                    <tr key={msg.id} style={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f7fafc'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
+                      <td style={{ fontWeight: 'bold', padding: '8px' }}>{msg.id}</td>
+                      <td style={{ fontSize: '12px', fontFamily: 'monospace', padding: '8px' }}>
                         {msg.transactionId}
-                      </Td>
-                      <Td fontSize="xs" maxW="200px" title={msg.errorMessage}>
+                      </td>
+                      <td style={{ fontSize: '12px', maxWidth: '200px', padding: '8px', overflow: 'hidden', textOverflow: 'ellipsis' }} title={msg.errorMessage}>
                         {truncateError(msg.errorMessage)}
-                      </Td>
-                      <Td>
+                      </td>
+                      <td style={{ padding: '8px' }}>
                         <Progress
                           value={(msg.retryCount / msg.maxRetries) * 100}
                           size="sm"
@@ -376,16 +371,16 @@ const DLQDashboard = () => {
                         <Text fontSize="xs" mt={1}>
                           {msg.retryCount}/{msg.maxRetries}
                         </Text>
-                      </Td>
-                      <Td>
+                      </td>
+                      <td style={{ padding: '8px' }}>
                         <Badge colorScheme={getStatusColor(msg.status)}>
                           {msg.status}
                         </Badge>
-                      </Td>
-                      <Td fontSize="xs">
+                      </td>
+                      <td style={{ fontSize: '12px', padding: '8px' }}>
                         {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : 'N/A'}
-                      </Td>
-                      <Td>
+                      </td>
+                      <td style={{ padding: '8px' }}>
                         <HStack spacing={2}>
                           {msg.canRetry && (
                             <Button
@@ -393,8 +388,9 @@ const DLQDashboard = () => {
                               colorScheme="blue"
                               leftIcon={<RepeatIcon />}
                               onClick={() => {
-                                setSelectedMessage(msg);
-                                onRetryOpen();
+                                if (window.confirm(`Are you sure you want to retry message ${msg.id}?\n\nTransaction: ${msg.transactionId}`)) {
+                                  handleRetryMessage(msg.id);
+                                }
                               }}
                               isLoading={retrying === msg.id}
                             >
@@ -407,18 +403,19 @@ const DLQDashboard = () => {
                               colorScheme="red"
                               variant="outline"
                               onClick={() => {
-                                setSelectedMessage(msg);
-                                onDeadOpen();
+                                if (window.confirm(`Mark message ${msg.id} as permanently dead?\n\nThis action cannot be undone.\n\nTransaction: ${msg.transactionId}`)) {
+                                  handleMarkAsDead(msg.id);
+                                }
                               }}
                             >
                               Dead
                             </Button>
                           )}
                         </HStack>
-                      </Td>
-                    </Tr>
+                      </td>
+                    </tr>
                   ))}
-                </Tbody>
+                </tbody>
               </Table>
             </Box>
           )}
@@ -452,86 +449,7 @@ const DLQDashboard = () => {
         )}
       </VStack>
 
-      {/* Retry Modal with Reason */}
-      <Modal isOpen={isRetryOpen} onClose={onRetryClose} isCentered>
-        <ModalOverlay backdropFilter="blur(2px)" />
-        <ModalContent>
-          <ModalHeader>Confirm Retry</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <Text fontWeight="bold">
-                Are you sure you want to retry message {selectedMessage?.id}?
-              </Text>
-              <Text fontSize="sm" color="gray.600">
-                Transaction ID: {selectedMessage?.transactionId}
-              </Text>
-              <FormControl>
-                <FormLabel>Reason for Retry (optional)</FormLabel>
-                <Input
-                  placeholder="Enter reason..."
-                  value={retryReason}
-                  onChange={(e) => setRetryReason(e.target.value)}
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onRetryClose}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              onClick={() => handleRetryMessage(selectedMessage?.id)}
-              isLoading={retrying === selectedMessage?.id}
-            >
-              Retry
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Mark as Dead Modal */}
-      <Modal isOpen={isDeadOpen} onClose={onDeadClose} isCentered>
-        <ModalOverlay backdropFilter="blur(2px)" />
-        <ModalContent>
-          <ModalHeader>Mark Message as Dead</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <HStack color="red.600">
-                <AlertIcon />
-                <Text fontWeight="bold">This action cannot be undone</Text>
-              </HStack>
-              <Text>
-                Are you sure you want to mark message {selectedMessage?.id} as permanently dead?
-              </Text>
-              <FormControl>
-                <FormLabel>Reason (required)</FormLabel>
-                <Input
-                  placeholder="Enter reason..."
-                  value={deadReason}
-                  onChange={(e) => setDeadReason(e.target.value)}
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onDeadClose}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="red"
-              onClick={() => {
-                handleMarkAsDead(selectedMessage?.id);
-                onDeadClose();
-              }}
-            >
-              Mark as Dead
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {/* Simple confirmation dialogs using native browser dialogs */}
     </Container>
   );
 };

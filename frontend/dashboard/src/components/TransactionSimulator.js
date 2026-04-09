@@ -475,5 +475,3 @@ TransactionSimulator.prototype.startDemoMode = function() {
 };
 
 export default TransactionSimulator;
-
-export default TransactionSimulator;

@@ -116,7 +116,7 @@ public class TransactionMessageListener {
             }
             metricsService.addProcessingTimeMillis(processingTime);
 
-        } catch (IllegalArgumentException | java.io.IOException jsonEx) {
+        } catch (IllegalArgumentException jsonEx) {
             // Non-recoverable serialization error
             Map<String, Object> errorContext = new HashMap<>();
             errorContext.put("event", "DESERIALIZATION_ERROR");

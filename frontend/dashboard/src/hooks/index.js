@@ -5,4 +5,4 @@
 export { useRiskConfig, useRiskConfig as default } from './useRiskConfig';
 export { useRiskConfigForm } from './useRiskConfigForm';
 export { useRefresh } from './useRefresh';
-export { useWebSocket } from './useWebSocket';
+export { default as useWebSocket } from './useWebSocket';
