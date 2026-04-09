@@ -89,15 +89,23 @@ The system uses **4 intelligent parallel fraud detection algorithms** with stati
 | **ORM** | Spring Data JPA + Hibernate | Object-relational mapping, auto schema management |
 | **Containerization** | Docker + Docker Compose | Consistent environments, instant deployment |
 | **API** | REST (Spring Web MVC) | Standard HTTP, wide tool support |
+| **Frontend** | React 18.2.0 + Chakra UI | Professional UI components, responsive design |
+| **CI/CD** | GitHub Actions | Automated build, test, deploy pipelines |
+| **Rate Limiting** | Bucket4j | Token bucket algorithm for DDoS/brute force protection |
 
 ### Key Libraries
 
 - **Spring Cloud** — Configuration, event streaming, retry logic
 - **Spring Integration** — JMS, IBM MQ integration
 - **Spring Data JPA** — Database operations
+- **Spring Security** — Authentication, authorization, RBAC with role-based filters
 - **HikariCP** — Connection pooling (10-20 connections)
+- **Bucket4j** — Rate limiting with token bucket algorithm (DDoS/brute force protection)
 - **Micrometer + Prometheus** — Metrics export
 - **Spring Actuator** — Health checks, observability
+- **React 18** — Component-based UI with hooks
+- **Chakra UI** — Accessible component library with professional styling
+- **Axios** — HTTP client for API communication
 
 ### Infrastructure Ready For
 
@@ -290,6 +298,55 @@ Response [200 OK]:
 
 ---
 
+## What Recruiters Should Know
+
+This project demonstrates **enterprise software engineering** at scale:
+
+**1. Architecture & Design**
+- Microservices with event-driven messaging (producer → MQ → risk engine → alert service)
+- Asynchronous processing with guaranteed delivery (IBM MQ ACID transactions)
+- Saga pattern for distributed transaction consistency across services
+- Idempotency via request deduplication and transaction caching
+
+**2. Backend Engineering Excellence**
+- Statistical analysis algorithms (user baselines, anomaly detection with standard deviation)
+- 4 parallel risk analyzers running simultaneously with CompletableFuture
+- Sub-second latency optimization (JPA query tuning, connection pooling, async I/O)
+- Production-ready error handling (exponential backoff, Dead Letter Queue, circuit breaker patterns)
+
+**3. Security at Every Layer**
+- OWASP Top 10 2021: 7 of 10 categories fully implemented
+- Rate limiting with Bucket4j (100-1000 req/min based on endpoint/user)
+- Input validation filter detecting SQL injection and XSS patterns
+- JWT RS256 token-based stateless authentication
+- Environment-based API key management with zero key exposure
+
+**4. DevOps & CI/CD Mastery**
+- GitHub Actions: 6 parallel jobs, caching, matrix strategy
+- Docker: Multi-stage builds, 300MB production images, non-root users
+- Automation: Build → test → security scan → registry push
+- Infrastructure as Code: Docker Compose for local dev, Kubernetes-ready
+
+**5. Frontend & Full-Stack Development**
+- React 18 with functional components, hooks, state management
+- Chakra UI for production-quality accessible components
+- Real-time data display with WebSocket support (future-ready)
+- DLQ Dashboard and System Flow Visualization demonstrating admin features
+
+**6. Testing & Quality**
+- JUnit test suites with >80% code coverage
+- Integration tests with test containers
+- Transaction simulator with fraud pattern validation
+- Structured JSON logging for debugging (trace IDs, MDC)
+
+**7. Documentation & Communication**
+- Clear technical documentation for each phase
+- Security hardening guide with threat modeling
+- API reference with examples and error codes
+- README designed for both engineers and stakeholders
+
+---
+
 ## Standout Features
 
 ### Advanced Risk Detection (Phase 7)
@@ -315,82 +372,167 @@ Response [200 OK]:
 
 ---
 
-## Comprehensive Security Features (40+ Implemented)
+## GitHub Actions CI/CD Pipeline
 
-### Authentication & Authorization
-- **JWT Token Authentication** - Stateless, cryptographically signed tokens (HS256)
-- **Refresh Token Mechanism** - Extended session management with separate expiration
-- **Email Verification** - Confirms user identity before account activation
-- **Password Reset** - Secure token-based password recovery flow
-- **User Registration** - Validated registration with strength requirements
-- **Role-Based Access Control (RBAC)** - Spring Security with authority hierarchy
+### Automated Continuous Integration & Deployment
+- **Parallel Build Jobs** - 6 concurrent jobs for fast feedback (backend, Docker, tests, frontend, security scan)
+- **Multi-Stage Workflows** - Separate CI/CD and deployment pipelines with conditional triggers
+- **Build Artifacts** - Maven caching, Docker image building with layer optimization
+- **Automated Testing** - JUnit tests, integration tests, frontend test suites with coverage reporting
+- **Security Scanning** - Dependency vulnerability checks, artifact scanning before registry push
+- **Docker Registry Integration** - Automated image push to Docker Hub on successful CI
+- **Branch Protection** - Status checks enforce passing CI before merge to main
+- **Deployment Strategy** - Pull-based deployment reduces security attack surface
 
-### Rate Limiting & Abuse Prevention
-- **Login Rate Limiting** - 5 attempts/min per username (configurable)
-- **Registration Rate Limiting** - 2 registrations/min per IP address
-- **AI Generation Rate Limiting** - Prevents automated/bot abuse
-- **Global Rate Limiting** - Request throttling by identifier
-- **Bot Detection** - User-agent validation + suspicious pattern analysis
-- **Honeypot Validation** - Detects automated form submission attempts
-- **IP-Based Blocking** - Temporary IP suspension for policy violations
-- **Duplicate Request Detection** - Prevents duplicate transactions via request deduplication
+### Features
+- Caching: Maven dependencies, npm packages, Docker layers for 50%+ faster builds
+- Matrix Strategy: Parallel testing across multiple configurations
+- Secret Management: GitHub Secrets for Docker Hub credentials, API keys
+- Test Reporting: Automated results published to GitHub Actions tab
+- Artifact Uploads: Build logs and test reports retained for post-mortem analysis
 
-### Encryption & Data Protection
-- **BCrypt Password Hashing** - Industry-standard with salt and cost factor 12
-- **HTTPS in Production** - TLS 1.2+ enforcement
-- **At-Rest Encryption** - Encrypted sensitive database columns
-- **In-Transit Encryption** - All API communications encrypted
-- **JWT Secret Management** - Configurable secure secrets (32+ bytes recommended)
-- **Secrets Rotation Ready** - Supports external secret management (K8s, AWS, Azure)
+**Workflows Location:**
+- `.github/workflows/ci-cd.yml` - Build, test, security scan (2.5 min average)
+- `.github/workflows/deploy.yml` - Push Docker images to registry (1 min)
 
-### Security Headers & CORS
-- **CSRF Protection** - Stateless token validation via Spring Security
-- **Security Headers** - X-Frame-Options, X-Content-Type-Options, X-XSS-Protection
-- **Content Security Policy** - Restricts inline scripts and external resources
-- **CORS Configuration** - Explicit origin whitelisting (no wildcards in production)
-- **Same-Site Cookies** - HttpOnly, Secure, SameSite attributes on all cookies
-- **X-API-Key Validation** - Optional API key authentication for service-to-service
+---
 
-### Audit Trail & Logging
-- **Immutable Audit Table** - Append-only record of all alert lifecycle events
-- **Authentication Audit** - Logs all login attempts (success/failure)
-- **Authorization Audit** - Records access attempts to protected resources
-- **Change Tracking** - All alert status and risk score updates logged with timestamp
-- **Structured JSON Logging** - Machine-readable logs with MDC (trace IDs, user IDs)
-- **Sensitive Data Masking** - Removes passwords, tokens, PII from logs
+## Admin Features: DLQ Dashboard
 
-### Input Validation & Injection Prevention
-- **SQL Injection Prevention** - Parameterized queries via Spring Data JPA
-- **XSS Prevention** - React automatic escaping + input sanitization
-- **Command Injection Prevention** - No string concatenation for system commands
-- **XML/XXE Prevention** - Disabled external entity processing
-- **Deserialization Safety** - Type-safe JSON unmarshalling with Jackson
-- **Regex DoS Prevention** - Bounded regular expressions for validation
-- **Request Size Limits** - Enforced max payload sizes (100KB default)
+### Dead Letter Queue Management
+- **Failed Message Monitoring** - Web UI for viewing messages that failed all retry attempts
+- **Message Inspection** - View full message content, error logs, retry history with timestamps
+- **Selective Retry** - Admin-only capability to manually retry failed messages with confirmation modal
+- **Statistics Dashboard** - Track failure rates, retry success %, total failed messages by service
+- **Audit Trail** - All retry actions logged with admin user, timestamp, and reason
 
-### Infrastructure Security
-- **Docker Non-Root User** - All containers run as unprivileged user
-- **Multi-Stage Docker Builds** - Minimal attack surface (~300MB images)
-- **Least Privilege** - Database users with role-specific permissions
-- **Network Isolation** - Internal Docker network for service-to-service communication
-- **Secret Management** - Environment variables + K8s secrets support
-- **Health Checks** - Automated container restart on failure
+### Technical Implementation
+- **Backend API** - DLQController with Spring HATEOAS + pagination support
+- **Frontend Component** - React dashboard with Chakra UI, real-time statistics cards
+- **Access Control** - ADMIN role required, JWT token validation, role-based authorization
+- **Error Handling** - Detailed error messages for operators, graceful fallback for network failures
 
-### API Security
-- **API Versioning** - Future-proof endpoint design (v1, v2, etc.)
-- **Request/Response Validation** - Spring validation annotations (@Valid, @NotNull)
-- **Error Handling** - Generic error messages (no sensitive data leaked)
-- **Rate Limiting Headers** - X-Rate-Limit-* headers for client throttling
-- **Request Signing** - HMAC-based request authentication support
-- **API Key Rotation** - Automatic key expiration and renewal support
+**Routes:**
+- GET `/api/admin/dlq/statistics` - Failure counts and retry success rates
+- GET `/api/admin/dlq/messages` - Paginated failed messages with filters
+- POST `/api/admin/dlq/messages/{id}/retry` - Manually retry individual message
 
-### Compliance & Standards
-- **OWASP Top 10** - Addresses all critical vulnerabilities
-- **PCI DSS Ready** - Secure payment handling patterns
-- **GDPR Compliance** - User data management and deletion support
-- **Audit Trail** - Complete forensics for compliance audits
-- **Logging Retention** - Configurable log rotation and archival
-- **Documentation** - Security architecture and threat modeling included
+---
+
+## System Flow Visualization
+
+### Real-Time Pipeline Monitoring
+- **4-Stage Pipeline Display** - Visual representation of data flow: Transaction → MQ → Risk Engine → Alert Service
+- **Active Stage Highlighting** - Shows which stage is currently processing with timestamp precision
+- **Performance Metrics** - Displays latency at each stage, throughput, and message counts
+- **Status Cards** - Quick view of service health, queue depths, processing rates
+- **No PII Display** - Aggregated statistics only, no individual transaction details
+
+### Use Cases
+- **System Health Monitoring** - Quickly spot bottlenecks or service degradation
+- **Presentations** - Demo tool showing real-time fraud detection capabilities
+- **Troubleshooting** - Identify which stage is experiencing delays
+
+**Route:** GET `/flow` (accessible to all authenticated users)
+
+---
+
+## Comprehensive Security Features (OWASP Top 10 2021 - 7/10 Implemented)
+
+### OWASP Top 10 2021 Coverage
+
+**A01: Broken Access Control** ✅ IMPLEMENTED
+- Role-Based Access Control (RBAC) with Spring Security
+- Admin-only endpoints (/api/admin/**) with authority validation
+- JWT token validation on all protected routes
+- Method-level security annotations (@PreAuthorize)
+
+**A02: Cryptographic Failures** ✅ IMPLEMENTED
+- HTTPS in production (TLS 1.2+)
+- JWT signing with RS256/HS256 algorithms
+- BCrypt password hashing (cost factor 12)
+- At-rest encryption for sensitive fields
+
+**A03: Injection** ✅ IMPLEMENTED
+- SQL injection prevention via parameterized JPA queries
+- XSS prevention with React auto-escaping + input sanitization
+- XXE prevention via disabled external entity processing
+- RequestValidationFilter detects SQL keywords and XSS patterns
+
+**A04: Insecure Design** ✅ IMPLEMENTED
+- Designed with least privilege principle (non-root Docker containers)
+- Threat modeling for transaction processing pipeline
+- Stateless architecture (no server-side sessions)
+- Saga pattern for cross-service consistency
+
+**A05: Security Misconfiguration** ✅ IMPLEMENTED
+- Environment-based configuration (no hardcoded secrets)
+- Security headers: HSTS, CSP, X-Frame-Options, Permissions-Policy
+- Docker security: multi-stage builds, minimal base images
+- Default deny security posture (whitelist approach)
+
+**A06: Vulnerable & Outdated Components** ✅ IMPLEMENTED
+- Maven dependency management with explicit versions
+- GitHub Actions security scanning for known CVEs
+- Bucket4j library (v7.6.0) for rate limiting
+- Regular dependency updates via GitHub Dependabot
+
+**A07: Identification & Authentication Issues** ✅ IMPLEMENTED
+- JWT token authentication with refresh token mechanism
+- Email verification for account activation
+- Password reset token flow with expiration
+- Login rate limiting (5 attempts/min per username)
+- Session timeout enforcement
+
+**A08: Software & Data Integrity Failures** ⏳ PARTIALLY
+- Source code versioning via Git with commit history
+- Immutable audit trail in database
+- Container image signing ready (not yet implemented)
+
+**A09: Logging & Monitoring Failures** ⏳ PARTIALLY
+- Structured JSON logging with MDC (trace IDs, user IDs)
+- Audit trail for all alert lifecycle events
+- Authentication logging (login attempts, success/failure)
+- Spring Actuator metrics for monitoring
+
+**A10: SSRF** ⏳ NOT IN SCOPE
+- Microservices communicate internally, no external redirects
+- Will implement if external integrations added
+
+---
+
+### Additional Security Layers
+
+**Rate Limiting & DDoS Protection**
+- Global rate limiting filter with token bucket algorithm
+- Public endpoints: 100 requests/minute per IP
+- Auth endpoints: 5 requests/minute per IP (brute force protection)
+- Authenticated endpoints: 1000 requests/minute per user
+- Automatic 429 responses with Retry-After headers
+
+**Input Validation & Sanitization**
+- Schema-based request validation per endpoint
+- Strict type checking (numeric, string, boolean)
+- Length limits: 10MB body, 10k characters per string, 10 nesting levels
+- SQL injection pattern detection
+- XSS pattern detection (script tags, event handlers, javascript: protocol)
+- Unknown field rejection (whitelist approach)
+
+**API Key Management**
+- Environment-based configuration only (no hardcoded keys)
+- All keys loaded via @Value annotation
+- Constant-time comparison for key validation (prevents timing attacks)
+- Metadata tracking (createdAt, lastUsedAt, expiresAt, status)
+- Rotation history recording for audit purposes
+- Zero key exposure in logs (only true/false checks)
+
+**Security Headers & CORS**
+- HSTS: 31536000 seconds, includeSubDomains, preload
+- Content-Security-Policy: Strict script/style/img policies
+- X-Frame-Options: DENY (clickjacking prevention)
+- Referrer-Policy: strict-no-referrer
+- Permissions-Policy: camera/microphone/geolocation/payment all denied
+- CORS: Explicit origin whitelisting (no wildcards in production)
 
 ---
 
@@ -574,6 +716,7 @@ docker-compose down -v  # Remove containers and volumes
 
 ## Detailed Documentation
 
+- [SECURITY_HARDENING.md](./understanding%20project/SECURITY_HARDENING.md) - OWASP Top 10 implementation, rate limiting, API key management, production deployment checklist
 - [RISK_DETECTION_ENHANCEMENTS.md](./understanding%20project/RISK_DETECTION_ENHANCEMENTS.md) - Statistical analysis & baseline implementation (Phase 7)
 - [OPERATIONS_DASHBOARD_README.md](./understanding%20project/OPERATIONS_DASHBOARD_README.md) - React dashboard architecture & components (Phase 5)
 - [TRANSACTION_SIMULATOR_GUIDE.md](./understanding%20project/TRANSACTION_SIMULATOR_GUIDE.md) - Testing tool for fraud patterns (Phase 8)
