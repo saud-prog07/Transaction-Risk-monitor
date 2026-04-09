@@ -20,20 +20,60 @@ spec:
         ports:
         - containerPort: 8082
         env:
+        # From ConfigMap (non-sensitive config)
         - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq"
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MQ_HOST
         - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: SPRING_RABBITMQ_USERNAME
-          value: "guest"
-        - name: SPRING_RABBITMQ_PASSWORD
-          value: "guest"
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MQ_PORT
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/risk_monitoring"
+          value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_NAME
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_LEVEL
+        # From Secret (sensitive credentials)
+        - name: SPRING_RABBITMQ_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MQ_USERNAME
+        - name: SPRING_RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MQ_PASSWORD
         - name: SPRING_DATASOURCE_USERNAME
-          value: "postgres"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_USERNAME
         - name: SPRING_DATASOURCE_PASSWORD
-          value: "postgres"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_PASSWORD
 
 ---
 apiVersion: v1

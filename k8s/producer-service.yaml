@@ -20,14 +20,33 @@ spec:
         ports:
         - containerPort: 8080
         env:
+        # From ConfigMap (non-sensitive config)
         - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq"
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MQ_HOST
         - name: SPRING_RABBITMQ_PORT
-          value: "5672"
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MQ_PORT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_LEVEL
+        # From Secret (sensitive credentials)
         - name: SPRING_RABBITMQ_USERNAME
-          value: "guest"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MQ_USERNAME
         - name: SPRING_RABBITMQ_PASSWORD
-          value: "guest"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MQ_PASSWORD
 
 ---
 apiVersion: v1
