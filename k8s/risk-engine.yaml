@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risk-engine
+  labels:
+    app: risk-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: risk-engine
+  template:
+    metadata:
+      labels:
+        app: risk-engine
+    spec:
+      containers:
+      - name: risk-engine
+        image: dddddddff/risk-engine:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "guest"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "guest"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/risk_monitoring"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "postgres"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "postgres"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: risk-engine
+  labels:
+    app: risk-engine
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8082
+    targetPort: 8082
+    protocol: TCP
+  selector:
+    app: risk-engine

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-service
+  labels:
+    app: producer-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer-service
+  template:
+    metadata:
+      labels:
+        app: producer-service
+    spec:
+      containers:
+      - name: producer-service
+        image: dddddddff/producer-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "guest"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "guest"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: producer-service
+  labels:
+    app: producer-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: producer-service
