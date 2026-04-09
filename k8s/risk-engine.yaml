@@ -14,6 +14,10 @@ spec:
       labels:
         app: risk-engine
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
       - name: risk-engine
         image: risk-engine:local

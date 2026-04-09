@@ -14,6 +14,10 @@ spec:
       labels:
         app: producer-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
       - name: producer-service
         image: producer-service:local

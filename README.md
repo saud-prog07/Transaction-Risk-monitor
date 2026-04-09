@@ -5,7 +5,19 @@
 A production-ready, event-driven system that processes financial transactions through sophisticated risk analysis, providing immediate fraud detection and alert management with millisecond latency.
 
 ## Quick Links
-
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8082
+  initialDelaySeconds: 30    # Wait 30 seconds before first check
+  periodSeconds: 10          # Check every 10 seconds
+  failureThreshold: 3        # Restart after 3 failed checks  livenessProbe:
+        httpGet:
+          path: /actuator/health
+          port: 8082
+        initialDelaySeconds: 30    # Wait 30 seconds before first check
+        periodSeconds: 10          # Check every 10 seconds
+        failureThreshold: 3        # Restart after 3 failed checks
 ###  Getting Started (Choose Your Path)
 | Guide | Description | Time |
 |-------|-------------|------|
@@ -519,6 +531,15 @@ This project demonstrates **enterprise software engineering** at scale:
 ---
 
 ### Additional Security Layers
+
+**Container & Kubernetes Security**
+- **Non-Root User Execution** - All containers run as unprivileged `appuser` (UID 1000)
+  - **Why Non-Root?** Prevents privilege escalation attacks. If an attacker compromises a container, they gain limited access to only that container's files, not the entire system. Root containers put the entire cluster at risk if breached.
+  - **Implementation** - Dockerfiles create non-root user; Kubernetes enforces via `securityContext: {runAsNonRoot: true, runAsUser: 1000}`
+  - **Benefit** - Even with a vulnerability, exploits cannot install malware system-wide, modify system libraries, or access host resources
+- **Read-Only Root Filesystem** - Prevents filesystem tampering during runtime
+- **Resource Limits** - CPU and memory constraints prevent resource exhaustion attacks
+- **Security Scanning** - Automated container image scanning for known vulnerabilities before deployment
 
 **Rate Limiting & DDoS Protection**
 - Global rate limiting filter with token bucket algorithm
