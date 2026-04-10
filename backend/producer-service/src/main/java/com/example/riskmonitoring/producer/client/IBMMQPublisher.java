@@ -5,6 +5,7 @@ import com.example.riskmonitoring.producer.exception.TransactionPublishingExcept
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jms.JmsException;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.retry.annotation.Backoff;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Component;
  * Publishes transaction messages to IBM MQ queue with automatic retry on failures.
  */
 @Slf4j
-@Component
+// @Component - DISABLED: IBM MQ 9.3.4.1 uses javax.jms incompatible with Spring Boot 3.4 jakarta.jms
+// Use RestTransactionClient instead
+@ConditionalOnProperty(name = "spring.jms-startup-enabled", havingValue = "true", matchIfMissing = false)
 public class IBMMQPublisher implements MessagePublisher {
 
     private final JmsTemplate jmsTemplate;

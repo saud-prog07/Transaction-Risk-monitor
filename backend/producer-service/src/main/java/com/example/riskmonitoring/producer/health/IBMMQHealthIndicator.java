@@ -4,6 +4,7 @@ import com.example.riskmonitoring.producer.client.IBMMQPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,7 +12,8 @@ import org.springframework.stereotype.Component;
  * Used by Spring Boot Actuator to monitor MQ connectivity.
  */
 @Slf4j
-@Component
+// @Component - DISABLED: IBM MQ 9.3.4.1 uses javax.jms incompatible with Spring Boot 3.4 jakarta.jms
+@ConditionalOnProperty(name = "spring.jms-startup-enabled", havingValue = "true", matchIfMissing = false)
 public class IBMMQHealthIndicator implements HealthIndicator {
 
     private final IBMMQPublisher ibmMQPublisher;

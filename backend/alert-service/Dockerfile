@@ -11,7 +11,7 @@ RUN addgroup -g 1000 appuser && \
 WORKDIR /app
 
 # Copy pre-built JAR from Maven build (target/ directory)
-COPY alert-service/target/*-SNAPSHOT.jar app.jar
+COPY target/*-SNAPSHOT.jar app.jar
 
 RUN chown -R appuser:appuser /app
 
