@@ -64,7 +64,9 @@ out/
 *.jar
 *.war
 *.ear
+*.log
 *.zip
+*.tar
 *.tar.gz
 .gradle/
 .m2/
