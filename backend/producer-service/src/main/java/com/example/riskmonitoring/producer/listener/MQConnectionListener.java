@@ -5,9 +5,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.jms.support.JmsUtils;
 import org.springframework.stereotype.Component;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.ExceptionListener;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.ExceptionListener;
 import java.time.Instant;
 
 /**
@@ -28,7 +28,7 @@ public class MQConnectionListener implements ExceptionListener {
      * @param exception the exception that occurred
      */
     @Override
-    public void onException(javax.jms.JMSException exception) {
+    public void onException(jakarta.jms.JMSException exception) {
         log.error("MQ Connection exception occurred", exception);
         
         isConnected = false;

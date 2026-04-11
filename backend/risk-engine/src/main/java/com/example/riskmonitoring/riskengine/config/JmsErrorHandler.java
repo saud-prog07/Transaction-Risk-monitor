@@ -29,7 +29,7 @@ public class JmsErrorHandler implements ErrorHandler {
 
         // Log structured error information for troubleshooting
         if (throwable != null) {
-            if (throwable instanceof javax.jms.JMSException) {
+            if (throwable instanceof jakarta.jms.JMSException) {
                 log.error("JMS_ERROR: JMS Connection/Message error - Check JMS setup and message broker");
             } else if (throwable instanceof org.springframework.messaging.MessageDeliveryException) {
                 log.error("JMS_ERROR: Message delivery failed - Network or broker issue");

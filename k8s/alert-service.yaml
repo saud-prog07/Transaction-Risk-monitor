@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: alert-service
+  namespace: risk-monitoring
   labels:
     app: alert-service
 spec:
@@ -20,65 +21,49 @@ spec:
         fsGroup: 1000
       containers:
       - name: alert-service
-        image: alert-service:local
-        imagePullPolicy: Never
+        image: alert-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8083
         env:
+        # Spring config location - points to mounted ConfigMap
+        - name: SPRING_CONFIG_LOCATION
+          value: "file:/config/"
         # From ConfigMap (non-sensitive config)
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/risk_monitoring"
-        - name: SPRING_RABBITMQ_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: MQ_HOST
-        - name: SPRING_RABBITMQ_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: MQ_PORT
+          value: "jdbc:mysql://mysql:3306/risk_monitoring?allowPublicKeyRetrieval=true&useSSL=false"
+        # MQ Configuration
+        - name: MQ_HOST
+          value: "ibm-mq"
+        - name: MQ_PORT
+          value: "1414"
+        - name: MQ_CHANNEL
+          value: "DEV.APP.SVRCONN"
         - name: LOG_LEVEL
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: LOG_LEVEL
+          value: "INFO"
         # From Secret (sensitive credentials)
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
-              name: app-secrets
-              key: DB_USERNAME
+              name: mysql-credentials
+              key: username
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: app-secrets
-              key: DB_PASSWORD
-        - name: SPRING_RABBITMQ_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: MQ_USERNAME
-        - name: SPRING_RABBITMQ_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: MQ_PASSWORD
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: DB_USERNAME
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: DB_PASSWORD
+              name: mysql-credentials
+              key: password
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: app-secrets
-              key: JWT_SECRET
+              name: jwt-secret
+              key: secret
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config/application.yml
+          subPath: application.yml
+        - name: config-volume
+          mountPath: /config/application-production.yml
+          subPath: application-production.yml
         # Health check: Is the pod alive?
         livenessProbe:
           httpGet:
@@ -97,12 +82,17 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 2
           failureThreshold: 2
+      volumes:
+      - name: config-volume
+        configMap:
+          name: alert-service-config
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: alert-service
+  namespace: risk-monitoring
   labels:
     app: alert-service
 spec:

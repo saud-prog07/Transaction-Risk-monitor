@@ -1,0 +1,369 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-service-config
+  namespace: risk-monitoring
+data:
+  application.yml: |
+    server:
+      port: 8083
+      servlet:
+        session:
+          cookie:
+            secure: true           # HTTPS only
+            http-only: true        # No JavaScript access
+            same-site: strict      # CSRF protection
+
+    spring:
+      application:
+        name: alert-service
+
+      main:
+        allow-bean-definition-overriding: true  # Allow duplicate bean definitions
+
+      datasource:
+        # MySQL Connection Details (using environment variables)
+        url: "${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/risk_monitoring?allowPublicKeyRetrieval=true&useSSL=false}"
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        username: "${SPRING_DATASOURCE_USERNAME:root}"
+        password: "${SPRING_DATASOURCE_PASSWORD:root}"
+
+        # HikariCP Connection Pool Configuration
+        hikari:
+          # Pool sizing
+          maximum-pool-size: 10          # Maximum connections in pool
+          minimum-idle: 5                # Minimum idle connections
+          
+          # Connection timing
+          connection-timeout: 20000      # 20 seconds to acquire connection
+          idle-timeout: 300000           # 5 minutes idle timeout
+          max-lifetime: 1200000          # 20 minutes max connection lifetime
+          
+          # Connection validation
+          connection-test-query: SELECT 1
+          validation-timeout: 5000       # 5 seconds for validation
+          leak-detection-threshold: 60000 # 60 seconds leak detection
+          
+          # Additional settings
+          auto-commit: true
+          read-only: false
+          isolation-level: TRANSACTION_READ_COMMITTED
+          initialization-fail-timeout: 1000
+
+      jpa:
+        # Database platform detection
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        
+        # Table generation strategy
+        hibernate:
+          ddl-auto: validate                  # validate: production, only validates
+        
+        # SQL generation and formatting
+        show-sql: false                     # Set to true for debugging SQL
+        open-in-view: false                 # Disable Open Session in View pattern
+        
+        # Hibernate properties - merged from separate jpa section
+        properties:
+          hibernate:
+            # SQL formatting and comments
+            "[format_sql]": true
+            "[use_sql_comments]": true
+            
+            # Batch processing
+            "[jdbc.batch_size]": 20
+            "[jdbc.fetch_size]": 50
+            "[jdbc.batch_versioned_data]": true
+            
+            # Statement caching
+            "[jdbc.statement_cache_size]": 250
+            "[jdbc.preferred_isolation_level]": 2  # READ_COMMITTED
+            
+            # Entity management
+            "[entity_delete_strategy]": delete
+            "[default_batch_fetch_size]": 16
+            
+            # Schema validation
+            "[globally_quoted_identifiers]": false
+            "[jdbc.use_get_generated_keys]": true
+            
+            # Connection retry and pooling
+            "[c3p0.acquire_increment]": 1
+            "[c3p0.max_size]": 20
+            "[c3p0.min_size]": 5
+            "[c3p0.timeout]": 300
+            "[c3p0.max_idle_time]": 600
+            
+            # Query timeout
+            "[javax.persistence.query.timeout]": 30000  # 30 seconds
+
+    # JWT Configuration
+    # IMPORTANT: Set these via environment variables in production
+    jwt:
+      # Must be at least 256 bits (32 characters) for HS256
+      # Set via JWT_SECRET environment variable in production
+      secret: ${JWT_SECRET:change-me-in-production-at-least-256-bits-long}
+      expiration: 3600000  # Access token expires in 1 hour (in milliseconds)
+      
+      # Refresh token configuration
+      refresh-secret: ${JWT_REFRESH_SECRET:change-me-in-production-at-least-256-bits-long}
+      refresh-expiration: 604800000  # Refresh token expires in 7 days (in milliseconds)
+
+    # Management Endpoints for monitoring
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,env,loggers,db
+          base-path: /actuator
+      
+      endpoint:
+        health:
+          show-details: always
+          include: db,ping
+      
+      # Metrics for connection pool monitoring
+      metrics:
+        export:
+          simple:
+            enabled: true
+
+    # Logging Configuration for database debugging
+    logging:
+      level:
+        # Application logging
+        com.example.riskmonitoring: DEBUG
+        
+        # Spring/JPA logging
+        org.springframework.jpa: DEBUG
+        org.springframework.data: DEBUG
+        org.springframework.orm: DEBUG
+        org.springframework.transaction: DEBUG
+        
+        # Hibernate SQL logging
+        org.hibernate: INFO
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+        
+        # Connection pool logging
+        com.zaxxer.hikari: INFO
+        com.zaxxer.hikari.HikariConfig: DEBUG
+        
+        # MySQL driver logging
+        jdbc: INFO
+        com.mysql: DEBUG
+
+    # Notification Configuration
+    notification:
+      # Email notification settings
+      email:
+        enabled: true                                      # Enable/disable email notifications
+        sender-prefix: "[RISK-ALERT]"                     # Prefix for email subjects
+        admin-email: admin@risk-monitoring.local           # Admin email for critical alerts
+        risk-team-email: riskteam@risk-monitoring.local    # Risk team email for alerts
+      
+      # Alert logging settings
+      alert-logging:
+        enabled: true                                      # Enable/disable detailed alert logs
+
+  application-production.yml: |
+    spring:
+      # Database configuration Configuration - Optimized for 10K+ concurrent users
+      datasource:
+        url: "${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/risk_monitoring?allowPublicKeyRetrieval=true&useSSL=false}"
+        username: "${SPRING_DATASOURCE_USERNAME:root}"
+        password: "${SPRING_DATASOURCE_PASSWORD:root}"
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        
+        # HikariCP Connection Pool Optimization
+        hikari:
+          maximum-pool-size: 100
+          minimum-idle: 20
+          connection-timeout: 20000              # 20 seconds to get a connection
+          idle-timeout: 600000                   # 10 minutes idle timeout
+          max-lifetime: 1800000                  # 30 minutes max lifetime
+          auto-commit: false                     # Control commits explicitly
+          leak-detection-threshold: 60000        # Warn if connection held > 1 min
+          connection-test-query: "SELECT 1"      # Validate connection alive
+          
+      # RabbitMQ configuration
+      rabbitmq:
+        host: "${SPRING_RABBITMQ_HOST:localhost}"
+        port: "${SPRING_RABBITMQ_PORT:5672}"
+        username: "${SPRING_RABBITMQ_USERNAME:guest}"
+        password: "${SPRING_RABBITMQ_PASSWORD:guest}"
+      
+      # JMS Configuration - MERGED with listener config
+      jms:
+        listener:
+          concurrency: 10-50                     # Auto-scale JMS listeners
+          max-poll-records: 100
+          prefetch: 10
+        session:
+          acknowledgment-mode: auto
+        ibm-mq:
+          queue-manager: ${MQ_QMGR:QMGR}
+          channel: ${MQ_CHANNEL:DEV.APP.SVRCONN}
+          connName: ${MQ_HOST:localhost}(${MQ_PORT:1414})
+          user: ${MQ_USER:app}
+          password: ${MQ_PASSWORD:passw0rd}
+          connection-pool-size: 20
+      
+      # JPA/Hibernate Optimization - MERGED with jpa.properties 
+      jpa:
+        hibernate:
+          ddl-auto: validate                     # Don't auto-create in production
+          naming:
+            physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        
+        show-sql: false
+        properties:
+          hibernate:
+            # Connection pooling
+            jdbc:
+              batch_size: 100                    # Batch inserts/updates
+              fetch_size: 100                    # Batch reads
+              batch_versioned_data: true
+            
+            # Query optimization
+            order_inserts: true                  # Batch inserts in order
+            order_updates: true                  # Batch updates in order
+            
+            # Logging and monitoring
+            format_sql: false                    # Disable in production (performance)
+            generate_statistics: true            # Collect stats for monitoring
+            use_sql_comments: false              # Reduce overhead
+            
+            # Performance tuning
+            jdbc.use_getGeneratedKeys: true
+            jdbc.use_streaming_result_sets: true
+            jdbc.use_scrollable_resultset: false
+            jdbc.use_column_alias_in_order_by: false
+            jdbc.wrap_result_sets: false
+            jdbc.fetch_size: '${HIBERNATE_JDBC_FETCH_SIZE:100}'
+            jdbc.use_get_generated_keys: true
+            
+            # Query cache (optional - enable if needed)
+            cache:
+              use_second_level_cache: true
+              region:
+                factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+            
+            # Connection validation
+            connection:
+              provider_disables_autocommit: true
+            
+            # Dialect configuration
+            dialect: org.hibernate.dialect.MySQL8Dialect
+            jdbc:
+              lob:
+                non_contextual_creation: true
+      
+      # Caching Configuration (Redis for production)
+      cache:
+        type: redis                              # Use Redis for distributed cache
+        redis:
+          host: ${REDIS_HOST:localhost}
+          port: ${REDIS_PORT:6379}
+          password: ${REDIS_PASSWORD:}
+          timeout: 2000ms
+          database: 0
+          lettuce:
+            pool:
+              max-active: 20
+              max-idle: 10
+              min-idle: 5
+              max-wait: 1000ms
+            shutdown-timeout: 200ms
+        
+        cache-names:
+          - userNewAlerts
+          - highRiskAlerts
+          - unresolvedAlerts
+          - userRecentAlerts
+          - activeAlertCount
+          - alertsByRiskLevel
+          - topFraudPatterns
+          - userStats
+          - riskMetrics
+      
+      ibm:
+        mq:
+          host: ${MQ_HOST:localhost}
+          port: ${MQ_PORT:1414}
+          queue-manager: QMGR
+          channel: ALERT.CHANNEL
+          user: ${MQ_USER:app}
+          password: ${MQ_PASSWORD:password}
+          conn-pool-size: 50
+          receive-buffer-size: 32768
+          send-buffer-size: 32768
+
+    # Logging - Minimal in production for performance
+    logging:
+      level:
+        root: WARN
+        com.example.riskmonitoring: INFO
+        org.springframework.web: WARN
+        org.hibernate: WARN
+        org.hibernate.SQL: OFF
+        org.hibernate.type.descriptor.sql.BasicBinder: OFF
+
+    # Actuator - Production monitoring
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,metrics,info,prometheus
+          base-path: /actuator
+      
+      endpoint:
+        health:
+          show-details: when-authorized
+        metrics:
+          enabled: true
+      
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+        tags:
+          application: alert-service
+          environment: production
+        distribution:
+          percentiles-histogram:
+            http.server.requests: true
+          slo:
+            http.server.requests: 100ms,500ms,1s,2s,4s
+
+    # Application Configuration
+    app:
+      security:
+        jwt:
+          secret: ${JWT_SECRET}
+          refresh-secret: ${JWT_REFRESH_SECRET}
+          expiration: 3600000                    # 1 hour
+          refresh-expiration: 604800000          # 7 days
+      
+      cors:
+        allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://yourdomain.com}
+      
+      rate-limit:
+        public-requests-per-minute: 100
+        auth-requests-per-minute: 5
+        authenticated-requests-per-minute: 1000
+
+    server:
+      port: 8082
+      servlet:
+        context-path: /api
+      
+      # Connection optimization
+      tomcat:
+        accept-count: 500                        # Queue size for pending connections
+        max-connections: 5000
+        max-threads: 100
+        min-spare-threads: 20
+        connection-upload-timeout: 10000
+        connection-timeout: 20000
+        keep-alive-timeout: 15000
+        max-keep-alive-requests: 100

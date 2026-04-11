@@ -1,6 +1,7 @@
 package com.example.riskmonitoring.producer.service;
 
 import com.example.riskmonitoring.common.models.Transaction;
+import com.example.riskmonitoring.common.models.TransactionEvent;
 import com.example.riskmonitoring.producer.client.MessagePublisher;
 import com.example.riskmonitoring.producer.domain.TransactionIngestionRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import java.util.UUID;
 /**
  * Service for handling transaction ingestion.
  * Responsible for converting requests to Transaction objects and publishing them to the message queue.
+ * Injects the MessagePublisher interface (implemented by MessagePublisherImpl).
  */
 @Slf4j
 @Service
@@ -20,6 +22,7 @@ public class TransactionIngestionService {
 
     private final MessagePublisher messagePublisher;
 
+    // Constructor injection of interface type
     public TransactionIngestionService(MessagePublisher messagePublisher) {
         this.messagePublisher = messagePublisher;
     }
@@ -46,7 +49,7 @@ public class TransactionIngestionService {
                     .location(request.getLocation())
                     .build();
 
-            // Publish to message queue
+            // Publish transaction to message queue
             messagePublisher.publishTransaction(transaction);
 
             log.info("Transaction ingested successfully. TransactionId: {}, UserId: {}, Amount: {}",

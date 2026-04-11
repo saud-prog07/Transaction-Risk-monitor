@@ -20,68 +20,66 @@ spec:
         fsGroup: 1000
       containers:
       - name: producer-service
-        image: producer-service:local
-        imagePullPolicy: Never
+        image: producer-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         env:
         # From ConfigMap (non-sensitive config)
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/risk_monitoring"
-        - name: SPRING_RABBITMQ_HOST
+        - name: IBM_MQ_HOST
           valueFrom:
             configMapKeyRef:
               name: app-config
-              key: MQ_HOST
-        - name: SPRING_RABBITMQ_PORT
+              key: IBM_MQ_HOST
+        - name: IBM_MQ_PORT
           valueFrom:
             configMapKeyRef:
               name: app-config
-              key: MQ_PORT
+              key: IBM_MQ_PORT
+        - name: IBM_MQ_QUEUE_MANAGER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: IBM_MQ_QUEUE_MANAGER
+        - name: IBM_MQ_CHANNEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: IBM_MQ_CHANNEL
+        - name: IBM_MQ_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: IBM_MQ_USER
         - name: LOG_LEVEL
           valueFrom:
             configMapKeyRef:
               name: app-config
               key: LOG_LEVEL
         # From Secret (sensitive credentials)
-        - name: SPRING_DATASOURCE_USERNAME
+        - name: IBM_MQ_PASSWORD
           valueFrom:
             secretKeyRef:
               name: app-secrets
-              key: DB_USERNAME
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: DB_PASSWORD
-        - name: SPRING_RABBITMQ_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: MQ_USERNAME
-        - name: SPRING_RABBITMQ_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: MQ_PASSWORD
+              key: IBM_MQ_PASSWORD
         # Health check: Is the pod alive?
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8080
-          initialDelaySeconds: 90  # Startup takes 45-60 seconds
-          periodSeconds: 15
-          timeoutSeconds: 5
-          failureThreshold: 3
+          initialDelaySeconds: 120  # Extended for JMS initialization
+          periodSeconds: 30        # Check every 30 seconds
+          timeoutSeconds: 10       # Allow 10 seconds for response
+          failureThreshold: 4      # Allow 4 failures before restart
         # Health check: Is the pod ready to receive traffic?
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
             port: 8080
-          initialDelaySeconds: 90  # Wait for full startup
-          periodSeconds: 10
-          timeoutSeconds: 2
-          failureThreshold: 2
+          initialDelaySeconds: 120  # Extended for MQ connection
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
 
 ---
 apiVersion: v1

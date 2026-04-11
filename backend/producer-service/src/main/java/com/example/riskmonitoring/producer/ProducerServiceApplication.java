@@ -3,9 +3,14 @@ package com.example.riskmonitoring.producer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.jms.annotation.EnableJms;
 
+/**
+ * Producer Service Application
+ */
+@EnableJms
 @SpringBootApplication
-@ConfigurationPropertiesScan
+@ConfigurationPropertiesScan("com.example.riskmonitoring")
 public class ProducerServiceApplication {
 
     public static void main(String[] args) {

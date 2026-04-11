@@ -42,15 +42,11 @@ jobs:
 
       # ✅ Deploy to Kubernetes
       - name: Deploy to Kubernetes
-        env:
-          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
         run: |
-          mkdir -p $HOME/.kube
-          echo "$KUBECONFIG_DATA" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-          
-          kubectl set image deployment/producer-service \
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig
+
+          kubectl --kubeconfig=kubeconfig set image deployment/producer-service \
             producer-service=ddddddddff/producer-service:${{ github.sha }} \
             -n risk-monitoring
-          
-          kubectl rollout status deployment/producer-service -n risk-monitoring --timeout=5m
+
+          kubectl --kubeconfig=kubeconfig rollout status deployment/producer-service -n risk-monitoring

@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: producer-service
-        image: docker.io/dddddddff/producer-service:latest
+        image: ddddddddff/producer-service:v2
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -34,40 +34,42 @@ spec:
           name: metrics
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq-service"
-        - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: SPRING_RABBITMQ_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: rabbitmq-credentials
-              key: username
-        - name: SPRING_RABBITMQ_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: rabbitmq-credentials
-              key: password
+          value: "production"
+        - name: MQ_HOST
+          value: "ibm-mq"
+        - name: MQ_PORT
+          value: "1414"
+        - name: MQ_USERNAME
+          value: "app"
+        - name: MQ_PASSWORD
+          value: "passw0rd"
         resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
           requests:
-            cpu: 250m
-            memory: 256Mi
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        startupProbe:
+          httpGet:
+            path: /api/actuator/health
+            port: 8080
+          failureThreshold: 30
+          periodSeconds: 5
         livenessProbe:
           httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /actuator/health/readiness
+            path: /api/actuator/health
             port: 8080
           initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/actuator/health
+            port: 8080
+          initialDelaySeconds: 15
           periodSeconds: 5
+          failureThreshold: 3
 
 ---
 apiVersion: v1

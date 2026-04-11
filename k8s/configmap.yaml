@@ -11,10 +11,12 @@ data:
   DB_NAME: "risk_monitoring"
   DB_POOL_SIZE: "10"
   
-  # RabbitMQ Configuration
-  MQ_HOST: "rabbitmq"
-  MQ_PORT: "5672"
-  MQ_MANAGEMENT_PORT: "15672"
+  # IBM MQ Configuration
+  IBM_MQ_HOST: "ibm-mq"
+  IBM_MQ_PORT: "1414"
+  IBM_MQ_QUEUE_MANAGER: "QM1"
+  IBM_MQ_CHANNEL: "DEV.APP.SVRCONN"
+  IBM_MQ_USER: "app"
   
   # Application Configuration
   LOG_LEVEL: "INFO"

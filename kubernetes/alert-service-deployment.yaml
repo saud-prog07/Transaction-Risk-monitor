@@ -19,8 +19,8 @@ spec:
     spec:
       containers:
       - name: alert-service
-        image: docker.io/dddddddff/alert-service:latest
-        imagePullPolicy: Always
+        image: alert-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8083
           name: http
@@ -28,32 +28,26 @@ spec:
           name: metrics
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq-service"
-        - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: SPRING_RABBITMQ_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: rabbitmq-credentials
-              key: username
-        - name: SPRING_RABBITMQ_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: rabbitmq-credentials
-              key: password
+          value: "production"
+        - name: MQ_HOST
+          value: "ibm-mq"
+        - name: MQ_PORT
+          value: "1414"
+        - name: MQ_USERNAME
+          value: "app"
+        - name: MQ_PASSWORD
+          value: "passw0rd"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres-service:5432/risk_monitoring"
+          value: "jdbc:mysql://mysql:3306/risk_monitoring"
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
-              name: postgres-credentials
+              name: mysql-credentials
               key: username
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: postgres-credentials
+              name: mysql-credentials
               key: password
         - name: JWT_SECRET
           valueFrom:

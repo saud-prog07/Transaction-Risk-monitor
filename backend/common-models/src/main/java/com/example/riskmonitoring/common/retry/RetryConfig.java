@@ -150,7 +150,7 @@ public class RetryConfig {
                 .maxDelayMs(30000)
                 .backoffMultiplier(2.0)
                 .randomDelayEnabled(true)
-                .retryOn(javax.jms.JMSException.class)
+                .retryOn(jakarta.jms.JMSException.class)
                 .retryOn(org.springframework.messaging.MessagingException.class);
     }
     
