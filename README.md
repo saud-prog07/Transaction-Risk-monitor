@@ -4,6 +4,15 @@
 
 A production-ready, event-driven system that processes financial transactions through sophisticated risk analysis, providing immediate fraud detection and alert management with millisecond latency.
 
+## Deployment & DevOps Highlights
+
+- **Docker Containerization** - Multi-stage optimized builds for minimal image size (~300MB per service)
+- **Kubernetes Orchestration** - Production-ready deployment with Horizontal Pod Autoscaling (HPA, 1-5 replicas at 50% CPU)
+- **CI/CD Pipeline** - GitHub Actions automated workflow (build → test → security scan → deploy)
+- **Observability** - Prometheus metrics & Spring Actuator for real-time monitoring
+
+---
+
 ## Quick Links
 
 ### Getting Started (Choose Your Path)
