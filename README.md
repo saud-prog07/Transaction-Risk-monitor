@@ -5,40 +5,28 @@
 A production-ready, event-driven system that processes financial transactions through sophisticated risk analysis, providing immediate fraud detection and alert management with millisecond latency.
 
 ## Quick Links
-livenessProbe:
-  httpGet:
-    path: /actuator/health
-    port: 8082
-  initialDelaySeconds: 30    # Wait 30 seconds before first check
-  periodSeconds: 10          # Check every 10 seconds
-  failureThreshold: 3        # Restart after 3 failed checks  livenessProbe:
-        httpGet:
-          path: /actuator/health
-          port: 8082
-        initialDelaySeconds: 30    # Wait 30 seconds before first check
-        periodSeconds: 10          # Check every 10 seconds
-        failureThreshold: 3        # Restart after 3 failed checks
-###  Getting Started (Choose Your Path)
+
+### Getting Started (Choose Your Path)
 | Guide | Description | Time |
 |-------|-------------|------|
 | **[SETUP.md](SETUP.md)** | Complete deployment guide for all scenarios | 30 min |
 | [Quick Start](#quick-start) | Docker Compose setup (simplest way) | 5 min |
 | [Local Development](#option-b-local-java-development) | Run services locally without Docker | 15 min |
 
-###  Configuration & Infrastructure
+### Configuration & Infrastructure
 | Resource | Purpose |
 |----------|---------|
 | **[.env.example](.env.example)** | Environment template with security best practices |
 | **[docker-compose.yml](docker-compose.yml)** | Service orchestration (documented) |
 | **[postgres-init.sql](postgres-init.sql)** | Database schema initialization |
 
-###  Architecture & Features
+### Architecture & Features
 - [System Architecture](#system-architecture) - Design & data flow
 - [Rest API Reference](#rest-api-reference) - Available endpoints
 - [Tech Stack](#tech-stack) - Technologies & frameworks
 - [Key Features](#key-features) - Fraud detection capabilities
 
-###  Operations & Monitoring
+### Operations & Monitoring
 - [Monitoring Dashboard](#monitoring-dashboard) - Real-time analytics
 - See [SETUP.md — Monitoring & Troubleshooting](SETUP.md#monitoring--troubleshooting) for health checks and debugging
 
