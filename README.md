@@ -994,3 +994,116 @@ Status: Production-Ready
 Version: 1.0.0
 Phases Completed: 8 (Architecture, Testing, Documentation, Advanced Detection, Dashboard, Simulator)
 
+
+
+---
+
+## 🚀 Deployment & Operations
+
+### Kubernetes Deployment (Production-Ready)
+
+This system is fully containerized and optimized for Kubernetes:
+
+**Deployment Components:**
+- **Namespace:** `risk-monitoring` - Isolated production environment
+- **Services:** 3 microservices deployed as Kubernetes Deployments
+- **Database:** PostgreSQL as StatefulSet  
+- **Message Broker:** IBM MQ for reliable messaging
+- **Load Balancing:** Kubernetes Service with ClusterIP/LoadBalancer
+- **Auto-scaling:** Horizontal Pod Autoscaler (HPA) configured (min 1, max 5 replicas)
+
+**Deploy to Kubernetes:**
+```bash
+kubectl create namespace risk-monitoring
+kubectl apply -f k8s/
+kubectl get pods -n risk-monitoring
+```
+
+### CI/CD Pipeline (GitHub Actions)
+
+**Automated:** `.github/workflows/producer-service-deploy.yml`
+
+**Pipeline:** Checkout → Build Maven → Docker Build → Push Registry → Deploy K8s
+
+**Trigger:** Automatic on `git push` to `main` branch
+
+---
+
+## 📊 Monitoring & Observability
+
+### Prometheus Metrics (Real-Time)
+
+All services export metrics at `/api/actuator/prometheus`
+
+**Available:**
+- JVM Metrics: Memory, threads, garbage collection
+- Spring Boot: HTTP requests, errors, latency
+- Tomcat: Connection pools, threads
+- Custom: Transaction times, risk scores
+
+**Prometheus URL:** `http://localhost:9090`
+
+---
+
+## 🛠 Development
+
+### Quick Start
+```bash
+git clone https://github.com/saud-prog07/Transaction-Risk-monitor.git
+docker-compose up -d
+cd backend && mvn clean package
+```
+
+### Repository Structure
+```
+backend/
+├── common-models/          # Shared DTOs
+├── producer-service/       # Transaction intake
+├── risk-engine/            # Fraud detection
+└── alert-service/          # Alert management
+frontend/dashboard/         # React dashboard
+k8s/                        # Kubernetes manifests
+.github/workflows/          # CI/CD pipelines
+```
+
+### Code Standards
+- Java 17+, Spring Boot 3.4+
+- Maven: `mvn clean verify`
+- Branch: `feature/FEATURE-NAME` or `fix/ISSUE-ID`
+- PR: All checks must pass, min 1 approval required
+
+---
+
+## 📝 Contributing
+
+**License:** MIT
+
+**Process:**
+1. Fork repository
+2. Create branch: `git checkout -b feature/your-feature`
+3. Commit with messages: `[TYPE] Description`
+4. Push and create Pull Request
+5. Wait for CI/CD to pass and code review
+
+**Guidelines:**
+- No hardcoded secrets or credentials
+- Code coverage minimum: 70%
+- Follow existing code style
+- Update tests with new features
+
+---
+
+## 📞 Resources
+
+- [SETUP.md](SETUP.md) - Complete deployment guide
+- [API-REFERENCE.md](API-REFERENCE.md) - REST endpoints
+- [ARCHITECTURE.md](ARCHITECTURE.md) - System design
+
+**Issues:** GitHub Issues with reproduction steps  
+**Features:** GitHub Discussions
+
+---
+
+**Status:** Production-Ready ✅  
+**Version:** 1.0.0  
+**Last Updated:** April 12, 2026

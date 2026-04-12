@@ -136,6 +136,100 @@ load-test-results.json
 *.lcov
 
 # ============================================================================
+# KUBERNETES & CLOUD CONFIGURATION
+# ============================================================================
+kubeconfig
+kubeconfig-*
+*.kubeconfig
+.kube/config
+.kube/config.bak
+k3d-*
+.minikube/
+.kind/
+
+# ============================================================================
+# DOCKER & CONTAINER ARTIFACTS
+# ============================================================================
+*.dockerignore-backup
+.docker/
+docker-compose.override.yml
+!docker-compose.yml
+!docker-compose.prod.yml
+!Dockerfile
+
+# ============================================================================
+# SYSTEM & BINARY FILES
+# ============================================================================
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.o-*
+
+# ============================================================================
+# PYTHON (if used in DevOps scripts)
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ============================================================================
+# TERRAFORM & INFRASTRUCTURE AS CODE
+# ============================================================================
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.tfvars
+terraform.tfvars.json
+
+# ============================================================================
+# ADDITIONAL TEMPORARY FILES
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+.#*
+*.orig
+*.rej
+
+# ============================================================================
 # ALLOWED: These files SHOULD be in the repo (recruiter-friendly)
 # ============================================================================
 !.gitignore
@@ -148,6 +242,10 @@ load-test-results.json
 !architecture/
 !**/*.md
 !backend/src/
+!frontend/src/
+!k8s/
+!docker-compose*.yml
+!Dockerfile*
 !frontend/dashboard/src/
 !Dockerfile
 !docker-compose.yml

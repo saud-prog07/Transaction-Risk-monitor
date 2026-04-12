@@ -4,11 +4,11 @@ import com.example.riskmonitoring.common.models.RiskLevel;
 import com.example.riskmonitoring.common.models.Transaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
@@ -35,10 +35,13 @@ import java.util.concurrent.TimeUnit;
  * - Or add to CI/CD pipeline as smoke test
  */
 @Slf4j
-@Component
+@SpringBootTest
+@TestPropertySource(locations = "classpath:application-test.properties")
 public class PipelineIntegrationTest {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
+    
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${producer.url:http://localhost:8080}")
